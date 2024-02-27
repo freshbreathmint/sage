@@ -2,8 +2,6 @@
 
 Right now this document is just going to be stream of conciousness thoughts about what I'm trying to make and do.
 
----
-
 ## Thoughts
 
 ### Sage should be modular
