@@ -9,6 +9,7 @@ This document will serve as a general guide to what still needs to be done devel
 * I need to gain a more complete understanding of rust before I try to create anything significant with it.
 * Figure out how to initially structure the program, meaning: if the application will contain the binary, or if the engine/framework will.
 * Figure out how to do hot loading in a good way.
+* Define the rest of this document better because you know what to do.
 
 ### Starting Project
 
@@ -20,7 +21,10 @@ This document will serve as a general guide to what still needs to be done devel
 ### More Immediate Things
 
 * Application and Engine initialization.
-* Main loop
+* Logging system.
+* Main loop, frame limiter?
+* Window initialization and management. (Platform layer?)
+* Engine/Application State?
 
 ### Future Things
 
