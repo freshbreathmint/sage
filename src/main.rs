@@ -1,3 +1,9 @@
+use std::{thread, time::Duration};
+
 fn main() {
-    println!("Hello, world!");
+    loop {
+        println!("Hello, Sage!");
+
+        thread::sleep(Duration::from_secs(1));
+    }
 }

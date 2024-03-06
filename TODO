@@ -1,3 +1,9 @@
+# TODO
+
+Current:
+    - Start building the hot reloading system from scratch.
+    - Figure out how to get the same functionality from the current loop into a hot reloadable system.
+
 General:
     - Learn rust.
     - Figure out how to implement a similar structure to what you had in C.

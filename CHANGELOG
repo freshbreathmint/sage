@@ -2,7 +2,15 @@
 
 ## IN DEVELOPMENT
 
+N/A
+
+## Version 0.0.1
+
 Changes:
+    - Added a tiny loop to the main file that prints "Hello, Sage!" every second.
     - Created /doc folder, for documentation.
+        - design.md:        Design document focusing on the structure of the engine generally.
+        - development.md:   A list of things that still need to be developed. (Everything)
+        - hot-reload.md:    Design document about the hot-reloading system.
     - Set up project files (CHANGELOG, LICENSE, README, TODO).
     - Started project.
