@@ -2,17 +2,18 @@
 
 Another stream of conciousness document focusing on the hot reload feature, trying to suss out why I need it.
 
-## Should I Do It Myself
+## Doing It Myself
 
-Probably not. But if I don't at least attempt to do an implementation myself I won't properly understand the limitations of the approach, and I won't understand what the approach actually is. Generally for any major system I should attempt to do it myself unless it makes more sense not to.
+I've decided to write the hot reloader myself, for a couple reasons.
 
-Ultimately it would make more sense to use a dedicated crate/library maintained by somebody else, because there could be potential improvements added by other developers that might be helpful in the future. But it really depends on how simple/complex it is to do this sort of thing.
+The existing hot reloader crate that I'm looking at has a lot of dependancies and is written in a not-exactly bespoke way.
+I feel like I'll understand it's functions better at the very least if I try to recreate it myself but in a way that is written from the start to be compatable with the framework/engine.
 
-## First Focus
+## Path Forward
 
-Building out this system should probably be the first focus of development for the engine.
+The path forward is to start from scratch trying to create a very basic but workable version of this hot reloading library.
 
-Without understanding the fundimentals behind a hot reloading system, I will probably find the modular structure of what I'm trying to make harder to implement hot reloading into, and harder to develop generally. Developing the hot reloading system from the get-go will allow me to define early what sort of thing I want sage to be.
+During this process, the initial file structure of the project should be decided.
 
 ## Thoughts
 
