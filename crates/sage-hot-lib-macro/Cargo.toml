@@ -4,3 +4,7 @@ version = "0.0.2-dev"
 
 [lib]
 proc-macro = true
+
+[dependencies]
+syn = { version = "2.0.52", features = ["full"] }
+quote = "1.0"

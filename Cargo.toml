@@ -7,3 +7,6 @@ members = [
 [package]
 name = "sage"
 version = "0.0.2-dev"
+
+[dependencies]
+sage-hot-lib = { path = "crates/sage-hot-lib" }

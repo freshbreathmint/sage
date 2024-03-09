@@ -3,4 +3,4 @@ name = "sage-hot-lib"
 version = "0.0.2-dev"
 
 [dependencies]
-sage-hot-lib-macro = {path = "../sage-hot-lib-macro"}
+sage-hot-lib-macro = { path = "../sage-hot-lib-macro" }
