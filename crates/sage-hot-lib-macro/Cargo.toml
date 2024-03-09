@@ -1,0 +1,6 @@
+[package]
+name = "sage-hot-lib-macro"
+version = "0.0.2-dev"
+
+[lib]
+proc-macro = true
