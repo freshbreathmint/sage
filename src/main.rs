@@ -2,8 +2,12 @@ use std::{thread, time::Duration};
 
 fn main() {
     loop {
-        println!("Hello, Sage!");
-
-        thread::sleep(Duration::from_secs(1));
+        do_needful()
     }
+}
+
+fn do_needful() {
+    println!("Hello, Sage!");
+
+    thread::sleep(Duration::from_secs(1));
 }
