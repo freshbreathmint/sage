@@ -1,12 +1,13 @@
 [workspace]
 members = [
-    "crates/sage-hot-lib", 
-    "crates/sage-hot-lib-macro",
+    "crates/*",
 ]
+resolver = "2"
 
 [package]
 name = "sage"
 version = "0.0.2-dev"
+edition = "2021"
 
 [dependencies]
 sage-hot-lib = { path = "crates/sage-hot-lib" }

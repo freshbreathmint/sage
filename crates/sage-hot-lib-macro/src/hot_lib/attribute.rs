@@ -8,15 +8,15 @@ pub(crate) struct HotLibAttribute {
     pub(crate) loaded_lib_name_template: syn::Expr,
 }
 
-// impl syn::parse::Parse for HotLibAttribute {
-//     fn parse(stream: syn::parse::ParseStream) -> Result<Self> {
-//         // Get the comma seperated expressions.
-//         let args = Punctuated::<syn::Expr, token::Comma>::parse_separated_nonempty(stream)?;
+impl syn::parse::Parse for HotLibAttribute {
+    fn parse(stream: syn::parse::ParseStream) -> Result<Self> {
+        // Get the comma seperated expressions.
+        let args = Punctuated::<syn::Expr, token::Comma>::parse_separated_nonempty(stream)?;
 
-//         for arg in args {
-//             match arg {
-//                 _ => return Err(Error::new(arg.span(), "unexpected input")),
-//             }
-//         }
-//     }
-// }
+        for arg in args {
+            match arg {
+                _ => return Err(Error::new(arg.span(), "unexpected input")),
+            }
+        }
+    }
+}

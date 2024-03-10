@@ -6,6 +6,4 @@ pub fn hot_lib(
     item: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let args = syn::parse_macro_input!(attr as hot_lib::HotLibAttribute);
-
-    item
 }
