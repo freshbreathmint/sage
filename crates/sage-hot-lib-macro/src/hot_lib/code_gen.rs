@@ -92,3 +92,25 @@ pub(crate) fn gen_hot_lib_function_for(lib_function: ForeignItemFn, span: Span) 
     // Return the generated function.
     Ok(function)
 }
+
+pub(crate) fn gen_lib_change_subscription_function(
+    f_decl: ForeignItemFn,
+    span: Span,
+) -> Result<ItemFn> {
+    // Destructure the `ForeignItemFn` to extract the signature, visibility, and attributes.
+    let ForeignItemFn {
+        sig, vis, attrs, ..
+    } = f_decl;
+
+    // Return an `ItemFn` representing the generated function definition.
+    Ok(ItemFn {
+        attrs,
+        vis,
+        sig,
+        block: syn::parse_quote_spanned! {span=>
+            {
+                __lib_loader_subscription()
+            }
+        },
+    })
+}
