@@ -1,10 +1,36 @@
 use proc_macro2::Span;
 use std::path::PathBuf;
-use syn::{Error, ForeignItemFn, LitStr, Result};
+use syn::{Error, ForeignItemFn, LitStr, Pat, Result};
+
+/// Extracts the identifier from a pattern in a function argument.
+///
+/// Used to extract the identifier of a function argument from it's pattern.
+///
+/// # Arguments
+///
+/// * `pat`:        The pattern of the argument.
+/// * `func_name`:  The identifier of the function, used for error reporting.
+/// * `span`:       The span of the function signature, used for error reporting.
+///
+/// # Returns
+///
+/// * `Ok(syn::Ident)`: The extracted identifier if the pattern is a simple identifier.
+/// * `Err(Error)`:     An error if the pattern cannot be converted to an identifier.
+pub fn ident_from_pat(pat: &Pat, func_name: &proc_macro2::Ident, span: Span) -> Result<syn::Ident> {
+    match pat {
+        Pat::Ident(pat) => Ok(pat.ident.clone()),
+        _ => Err(Error::new(
+            span,
+            format!(
+                "generating call for lib function: signature of function {func_name} cannot be converted"
+            ),
+        )),
+    }
+}
 
 /// Reads the contents of a Rust source file an dfinds the top level functions that have
-/// - Public visibility.
-/// - `#[no_mangle]` attribute.
+/// * Public visibility.
+/// * `#[no_mangle]` attribute.
 ///
 /// Functions are converted into a [syn::ForeignItemFn] so that they
 /// can serve as lib function declarations of the library reloader.
@@ -44,8 +70,36 @@ pub fn read_functions_from_file(
                     syn::Visibility::Public(_) => {}
                     _ => continue,
                 }
+
+                // Check for the `#[no_mangle]` attribute, if not present skip to the next item.
+                if !ignore_no_mangle {
+                    let no_mangle = fun
+                        .attrs
+                        .iter()
+                        .filter_map(|attr| attr.path.get_ident())
+                        .any(|ident| *ident == "no_mangle");
+
+                    if !no_mangle {
+                        continue;
+                    };
+                }
+
+                // Convert the function into a `ForeignItemFn` with an empty attributes vector
+                // and the same visibility and signature as the original function.
+                let fun = ForeignItemFn {
+                    attrs: Vec::new(),
+                    vis: fun.vis,
+                    sig: fun.sig,
+                    semi_token: syn::token::Semi(span),
+                };
+
+                // Add the converted function and its span to the `functions` vector.
+                functions.push((fun, span));
             }
             _ => continue,
         }
     }
+
+    // Return the vector of functions as a `Result`.
+    Ok(functions)
 }
