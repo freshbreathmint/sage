@@ -9,11 +9,11 @@ use syn::{
 /// Each field corresponds to an attribute that can be specified in the macro.
 ///
 /// # Fields
-/// - `lib_name`:                   Expression representing the name of the dynamic library.
-/// - `lib_dir`:                    Expression representing the directory of the dynamic library.
-/// - `file_watch_debounce_ms`:     Literal integer representing the debounce duration.
-/// - `crate_name`:                 A path representing the crate name associated with the dynamic library.
-/// - `loaded_lib_name_template`:   An expression representing a template for generating the name
+/// * `lib_name`:                   Expression representing the name of the dynamic library.
+/// * `lib_dir`:                    Expression representing the directory of the dynamic library.
+/// * `file_watch_debounce_ms`:     Literal integer representing the debounce duration.
+/// * `crate_name`:                 A path representing the crate name associated with the dynamic library.
+/// * `loaded_lib_name_template`:   An expression representing a template for generating the name
 ///                                 of the loaded library.
 pub(crate) struct HotLibAttribute {
     pub(crate) lib_name: Expr,
@@ -31,11 +31,11 @@ pub(crate) struct HotLibAttribute {
 /// Each attribute is optional, but if provided, it must adhear to the expected value type.
 ///
 /// # Attributes
-/// - `dylib`:                      The name of the dynamic library.
-/// - `lib_dir`:                    The directory where the dynamic library is located.
-/// - `file_watch_debounce`:        The debounce duration (in milliseconds) for file watch events.
-/// - `crate`:                      The crate name associated with the dynamic library.
-/// - `loaded_lib_name_template`:   A template for generating the name of the loaded library.
+/// * `dylib`:                      The name of the dynamic library.
+/// * `lib_dir`:                    The directory where the dynamic library is located.
+/// * `file_watch_debounce`:        The debounce duration (in milliseconds) for file watch events.
+/// * `crate`:                      The crate name associated with the dynamic library.
+/// * `loaded_lib_name_template`:   A template for generating the name of the loaded library.
 ///
 /// # Errors
 /// Returns an error if the input does not conform to the expected format,

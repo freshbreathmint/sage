@@ -12,13 +12,13 @@ use crate::util::read_functions_from_file;
 /// any specific hot-loading attributes defined using the `HotLibAttribute` structure.
 ///
 /// # Fields
-/// - `vis`:            The visibility of the hot library.
-/// - `ident`:          The identifier of the hot library.
-/// - `items`:          A vector of items contained within the hot library,
+/// * `vis`:            The visibility of the hot library.
+/// * `ident`:          The identifier of the hot library.
+/// * `items`:          A vector of items contained within the hot library,
 ///                     such as functions, types, and constants.
-/// - `attributes`:     A vector of attributes applied to the hot library,
+/// * `attributes`:     A vector of attributes applied to the hot library,
 ///                     such as `#[no_mangle]` or `#[export_name]`
-/// - `hot_lib_attr`:   An optional `HotLibAttribute` structure that contains specific
+/// * `hot_lib_attr`:   An optional `HotLibAttribute` structure that contains specific
 ///                     attributes related to the hot library, such as the name of the
 ///                     dynamic library and the debounce duration for file watch events.
 pub(crate) struct HotLibrary {
@@ -119,6 +119,12 @@ impl syn::parse::Parse for HotLibrary {
 
                     // Read functions from the specified file.
                     let functions = read_functions_from_file(file_name, ignore_no_mangle)?;
+
+                    // Iterate over each function and its span.
+                    for (f, span) in functions {
+                        // Generate a hot lib function for each function.
+                        let f = gen_hot_lib_function_for(f, span)?;
+                    }
                 }
 
                 // Push the item as it is.
