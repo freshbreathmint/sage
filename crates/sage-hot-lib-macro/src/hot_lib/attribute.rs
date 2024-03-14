@@ -13,6 +13,22 @@ pub(crate) struct HotLibAttribute {
 }
 
 /// Implement the `Parse` trait for `HotLibAttribute` to enable parsing.
+///
+/// Allows for the parsing of `HotLibAttribute` structures from procedural macro input.
+/// It expects a series of assignment expressions seperated by commas, with specific attribute
+/// names (`dylib`, `lib_dir`, `file_watch_debounce`, `crate` and `loaded_lib_name_template`).
+/// Each attribute is optional, but if provided, it must adhear to the expected value type.
+///
+/// # Attributes
+/// - `dylib`:                      The name of the dynamic library.
+/// - `lib_dir`:                    The directory where the dynamic library is located.
+/// - `file_watch_debounce`:        The debounce duration (in milliseconds) for file watch events.
+/// - `crate`:                      The crate name associated with the dynamic library.
+/// - `loaded_lib_name_template`:   A template for generating the name of the loaded library.
+///
+/// # Errors
+/// Returns an error if the input does not conform to the expected format,
+/// or if the required attributes are missing or have incorrect types.
 impl syn::parse::Parse for HotLibAttribute {
     fn parse(stream: syn::parse::ParseStream) -> Result<Self> {
         // Initialize optional HotLibAttribute fields to `None`.
@@ -105,6 +121,49 @@ impl syn::parse::Parse for HotLibAttribute {
                 _ => return Err(Error::new(arg.span(), "unexpected input")),
             }
         }
+
+        // Assign the `lib_name` or return an error if it doesn't exist.
+        let lib_name = match lib_name {
+            None => {
+                return Err(Error::new(
+                    stream.span(),
+                    r#"missing field "name": add `name = "name_of_library""#,
+                ))
+            }
+            Some(lib_name) => lib_name,
+        };
+
+        // Assign the `lib_dir` or set it to the debug/release build folder.
+        let lib_dir = match lib_dir {
+            None => {
+                if cfg!(debug_assertions) {
+                    syn::parse_quote! { concat!(env!("CARGO_MANIFEST_DIR"), "/target/debug") }
+                } else {
+                    syn::parse_quote! { concat!(env!("CARGO_MANIFEST_DIR"), "/target/release") }
+                }
+            }
+            Some(lib_dir) => lib_dir,
+        };
+
+        // Assign the `file_watch_debounce_ms` or default it to 500 milliseconds.
+        let file_watch_debounce_ms = match file_watch_debounce_ms {
+            None => LitInt::new("500", stream.span()),
+            Some(file_watch_debounce_ms) => file_watch_debounce_ms,
+        };
+
+        // Assign the `crate_name` or default the path to ::sage_hot_lib
+        let crate_name = match crate_name {
+            None => syn::parse_quote! { ::sage_hot_lib },
+            Some(crate_name) => crate_name,
+        };
+
+        // Assign the `loaded_lib_name_template` or default to `None`.
+        let loaded_lib_name_template = match loaded_lib_name_template {
+            None => syn::parse_quote! { Option::None },
+            Some(loaded_lib_name_template) => {
+                syn::parse_quote! { Some(#loaded_lib_name_template.to_string()) }
+            }
+        };
 
         // Return the parsed `HotLibAttribute`.
         Ok(HotLibAttribute {
