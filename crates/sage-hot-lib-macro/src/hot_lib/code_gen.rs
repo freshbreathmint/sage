@@ -1,6 +1,28 @@
 use proc_macro2::Span;
-use syn::{FnArg, ForeignItemFn, ItemFn, LitByteStr};
+use syn::{FnArg, ForeignItemFn, ItemFn, LitByteStr, LitStr, Result, Visibility};
 
+use crate::util::ident_from_pat;
+
+/// Generates a hot-loading wrapper function for a given foreign library function.
+///
+/// Takes a `ForeignItemFn` and a `Span`, generates an `ItemFn` that acts as a wrapper
+/// for the original function, enabling hot-loading of the library at runtime.
+///
+/// # Arguments
+///
+/// * `lib_function`:   A `ForeignItemFn` representing the foreign library function to wrap.
+/// * `span`:           A `Span` representing the source code location for error reporting.
+///
+/// # Returns
+///
+/// A `Result<ItemFn>` containing the generated wrapper function if successful,
+/// or an error if the generation fails.
+///
+/// # Errors
+///
+/// May return an error if:
+/// - The input function has a receiver / self type, which is not supported for exported library functions.
+/// - There is an issue with symbol loading from the library at runtime.
 pub(crate) fn gen_hot_lib_function_for(lib_function: ForeignItemFn, span: Span) -> Result<ItemFn> {
     // Destructure the `lib_function` to extract it's signature.
     let ForeignItemFn { sig, .. } = lib_function;
@@ -38,4 +60,35 @@ pub(crate) fn gen_hot_lib_function_for(lib_function: ForeignItemFn, span: Span) 
             }
         }
     }
+
+    // Create an error message for symbol loading faliure.
+    let err_msg_load_symbol = LitStr::new(
+        &format!("Cannot load library function {}", sig.ident),
+        Span::call_site(),
+    );
+
+    // Create the body of the function to be generated.
+    let block = syn::parse_quote! {
+        {
+            let lib_loader = __lib_loader();
+            let lib_loader = lib_loader.read().expect("lib loader RwLock read failed");
+            let sym = unsafe {
+                lib_loader
+                    .get_symbol::<fn( #( #input_names ),* ) #ret_type >(#symbol_name)
+                    .expect(#err_msg_load_symbol)
+            };
+            sym( #( #input_names ),* )
+        }
+    };
+
+    // Create the `ItemFn` representing the generated function.
+    let function = ItemFn {
+        attrs: Vec::new(),
+        vis: Visibility::Public(syn::token::Pub::default()),
+        sig,
+        block,
+    };
+
+    // Return the generated function.
+    Ok(function)
 }
