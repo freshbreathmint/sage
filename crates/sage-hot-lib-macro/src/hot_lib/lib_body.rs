@@ -1,8 +1,10 @@
+use quote::ToTokens;
 use syn::{
     spanned::Spanned, token, Attribute, Error, Ident, Item, ItemMacro, LitBool, LitStr, Macro,
-    Visibility,
+    Result, Visibility,
 };
 
+use super::code_gen::gen_hot_lib_function_for;
 use crate::util::read_functions_from_file;
 
 /// Represents a hot-loaded library.
@@ -124,6 +126,9 @@ impl syn::parse::Parse for HotLibrary {
                     for (f, span) in functions {
                         // Generate a hot lib function for each function.
                         let f = gen_hot_lib_function_for(f, span)?;
+
+                        // Add the generated function the module's items.
+                        items.push(Item::Fn(f));
                     }
                 }
 
