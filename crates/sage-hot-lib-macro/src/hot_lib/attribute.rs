@@ -3,7 +3,18 @@ use syn::{
     ExprPath, Ident, Lit, LitInt, Path, Result,
 };
 
-/// Represents the attributes of a hot library.
+/// Represents the attributes of a hot-loaded library.
+///
+/// Structure is used to store the parsed attributes from a procedural macro input.
+/// Each field corresponds to an attribute that can be specified in the macro.
+///
+/// # Fields
+/// - `lib_name`:                   Expression representing the name of the dynamic library.
+/// - `lib_dir`:                    Expression representing the directory of the dynamic library.
+/// - `file_watch_debounce_ms`:     Literal integer representing the debounce duration.
+/// - `crate_name`:                 A path representing the crate name associated with the dynamic library.
+/// - `loaded_lib_name_template`:   An expression representing a template for generating the name
+///                                 of the loaded library.
 pub(crate) struct HotLibAttribute {
     pub(crate) lib_name: Expr,
     pub(crate) lib_dir: Expr,
