@@ -1,6 +1,6 @@
 mod attribute;
 mod code_gen;
-mod lib_body;
+mod module_body;
 
 pub(crate) use attribute::HotLibAttribute;
-pub(crate) use lib_body::HotLibrary;
+pub(crate) use module_body::HotLibrary;

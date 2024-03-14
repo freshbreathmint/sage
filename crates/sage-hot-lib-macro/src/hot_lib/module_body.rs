@@ -1,7 +1,7 @@
 use quote::ToTokens;
 use syn::{
-    spanned::Spanned, token, Attribute, Error, Ident, Item, ItemMacro, LitBool, LitStr, Macro,
-    Result, Visibility,
+    spanned::Spanned, token, Attribute, Error, ForeignItemFn, Ident, Item, ItemMacro, LitBool,
+    LitStr, Macro, Result, Visibility,
 };
 
 use super::code_gen::gen_hot_lib_function_for;
@@ -62,7 +62,7 @@ impl syn::parse::Parse for HotLibrary {
 
             // Match the parsed item to determine its type and handle it accordingly.
             match item {
-                // If the item is a macro invocation named "hot_functions_from_file"
+                // The item is a macro invocation named "hot_functions_from_file"
                 // Process the macro to load functions from the specified file.
                 Item::Macro(ItemMacro {
                     mac: Macro { path, tokens, .. },
@@ -130,6 +130,25 @@ impl syn::parse::Parse for HotLibrary {
                         // Add the generated function the module's items.
                         items.push(Item::Fn(f));
                     }
+                }
+
+                // The item is a function that has the `#[lib_change_subscription]` attribute
+                Item::Fn(func)
+                    if func
+                        .attrs
+                        .iter()
+                        .any(|attr| attr.path().is_ident("lib_change_subscription")) =>
+                {
+                    // Get the span of the function.
+                    let span = func.span();
+
+                    // Create a new `ForeignItemFn` based on the parsed function.
+                    let f = ForeignItemFn {
+                        attrs: Vec::new(),
+                        vis: func.vis,
+                        sig: func.sig,
+                        semi_token: token::Semi::default(),
+                    };
                 }
 
                 // Push the item as it is.
