@@ -4,7 +4,7 @@ use syn::{
     LitStr, Macro, Result, Visibility,
 };
 
-use super::code_gen::gen_hot_lib_function_for;
+use super::code_gen::{gen_hot_lib_function_for, gen_lib_change_subscription_function};
 use crate::util::read_functions_from_file;
 
 /// Represents a hot-loaded library.
@@ -62,8 +62,7 @@ impl syn::parse::Parse for HotLibrary {
 
             // Match the parsed item to determine its type and handle it accordingly.
             match item {
-                // The item is a macro invocation named "hot_functions_from_file"
-                // Process the macro to load functions from the specified file.
+                // Macro: hot_functions_from_file!()
                 Item::Macro(ItemMacro {
                     mac: Macro { path, tokens, .. },
                     ..
@@ -127,12 +126,12 @@ impl syn::parse::Parse for HotLibrary {
                         // Generate a hot lib function for each function.
                         let f = gen_hot_lib_function_for(f, span)?;
 
-                        // Add the generated function the module's items.
+                        // Add the generated function the list of items in the `HotLibrary`.
                         items.push(Item::Fn(f));
                     }
                 }
 
-                // The item is a function that has the `#[lib_change_subscription]` attribute
+                // #[lib_change_subscription]
                 Item::Fn(func)
                     if func
                         .attrs
@@ -149,7 +148,21 @@ impl syn::parse::Parse for HotLibrary {
                         sig: func.sig,
                         semi_token: token::Semi::default(),
                     };
+
+                    // Generate the actual function for the library change subscription.
+                    let f = gen_lib_change_subscription_function(f, span)?;
+
+                    // Add the generated function to the list of items in the `HotLibrary`.
+                    items.push(Item::Fn(f));
                 }
+
+                //TODO: #[lib_version]
+
+                //TODO: #[lib_updated]
+
+                //TODO: #[hot_function]
+
+                //TODO: #[hot_functions]
 
                 // Push the item as it is.
                 item => items.push(item),
