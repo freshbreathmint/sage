@@ -3,6 +3,8 @@ use syn::{
     Visibility,
 };
 
+use crate::util::read_functions_from_file;
+
 /// Represents a hot-loaded library.
 ///
 /// Structure is used to store information about the hot-loaded library,
