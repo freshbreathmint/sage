@@ -1,15 +1,13 @@
 # TODO
 
 Current:
-    - Write a docstring for gen_lib_change_subscription function.
-    - Finish the rest of the  hot library parsing.
-    - Finish the rest of the hot_library proc macro attribute.
-    - Make sure everything has doc strings and is nicely documented and named.
-    - Start work on very basic example in main.rs for hot reloading.
-    - Use the failiure of that example to start building the rest of the library. (Calling stuff that doesn't exist yet!)
-    - Build the rest of the hot reloading library.
-    - Expand on the example code in main until you have a nicely bespoke version and you know more or less what you're going to do next.
+    - Start work on the LibReloader portion of the code.
+    - Build the rest of the hot reloading library until the default example works.
+    - Expand on the example code in main until you have a nicely bespoke version.
     - Fulfill the rest of the requirements in the 0.0.2 doc.
+
+Next Update:
+    - Strip the logging system out of the LibReloader and replace it with your own logging system.
 
 General:
     - Learn Rust.
