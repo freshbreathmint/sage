@@ -1,4 +1,5 @@
 use std::{
+    fs,
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, AtomicU32},
@@ -49,7 +50,7 @@ impl LibReloader {
     ) -> Result<Self, HotReloaderError> {
         // Find the target directory in which the build is happening and where we should find the library.
         let lib_dir = find_file_or_dir_in_parent_directories(lib_dir.as_ref())?;
-        log::debug!("found lib dir at {lib_dir:?}"); //TODO: Replace with Sage logging system.
+        log::debug!("found lib dir at {lib_dir:?}"); //TODO: Replace logging.
 
         let load_counter = 0;
 
@@ -60,6 +61,18 @@ impl LibReloader {
             load_counter,
             &loaded_lib_name_template,
         );
+
+        // Load the library and calculate its hash if it exists.
+        let (lib_file_hash, lib) = if watched_lib_file.exists() {
+            log::debug!("copying {watched_lib_file:?} -> {loaded_lib_file:?}"); //TODO: Replace logging.
+                                                                                // Copy the library file to avoid file lock issues on some platforms (not implemented)
+            fs::copy(&watched_lib_file, &loaded_lib_file)?;
+            let hash = hash_file(&loaded_lib_file);
+            (hash, Some(load_library(&loaded_lib_file)?))
+        } else {
+            log::debug!("library {watched_lib_file:?} does not yet exist");
+            (0, None)
+        };
     }
 }
 
@@ -106,6 +119,22 @@ fn find_file_or_dir_in_parent_directories(
         )
         .into())
     }
+}
+
+/// Calculates the CRC32 hash of the contents of a file.
+///
+/// Reads the entire contents of the file and computes its CRC32 hash.
+/// If the file cannot be read, the function returns a default hash value of 0.
+///
+/// # Arguments
+/// * `f` - The path to the file whose contents will be hashed.
+///
+/// # Returns
+/// The CRC32 hash of the file's contents as a `u32`.
+fn hash_file(f: impl AsRef<Path>) -> u32 {
+    fs::read(f.as_ref())
+        .map(|content| crc32fast::hash(&content))
+        .unwrap_or_default()
 }
 
 /// Determines the file paths for the watched and loaded versions of a library.

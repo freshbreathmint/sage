@@ -4,6 +4,7 @@ version = "0.0.2-dev"
 edition = "2021"
 
 [dependencies]
+crc32fast = "1.4.0"
 libloading = "0.8.3"
 sage-hot-lib-macro = { path = "../sage-hot-lib-macro" }
 thiserror = "1.0.58"
