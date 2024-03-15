@@ -1,9 +1,9 @@
 use proc_macro2::Span;
-use syn::{FnArg, ForeignItemFn, ItemFn, LitByteStr, LitStr, Result, Visibility};
+use syn::{FnArg, ForeignItemFn, Item, ItemFn, LitByteStr, LitStr, Result, Visibility};
 
 use crate::util::ident_from_pat;
 
-/// Generates a hot-loading wrapper function for a given foreign library function.
+/// Generates a hot-loading wrapper function for a given module function.
 ///
 /// Takes a `ForeignItemFn` and a `Span`, generates an `ItemFn` that acts as a wrapper
 /// for the original function, enabling hot-loading of the library at runtime.
@@ -23,7 +23,10 @@ use crate::util::ident_from_pat;
 /// May return an error if:
 /// - The input function has a receiver / self type, which is not supported for exported library functions.
 /// - There is an issue with symbol loading from the library at runtime.
-pub(crate) fn gen_hot_lib_function_for(lib_function: ForeignItemFn, span: Span) -> Result<ItemFn> {
+pub(crate) fn gen_hot_module_function_for(
+    lib_function: ForeignItemFn,
+    span: Span,
+) -> Result<ItemFn> {
     // Destructure the `lib_function` to extract it's signature.
     let ForeignItemFn { sig, .. } = lib_function;
 
@@ -122,6 +125,37 @@ pub(crate) fn gen_lib_change_subscription_function(
         block: syn::parse_quote_spanned! {span=>
             {
                 __lib_loader_subscription()
+            }
+        },
+    })
+}
+
+/// Generates a function that returns the current version of the library.
+///
+/// Takes a foreign function declaration and a span,
+/// generates a new function that returns the library version.
+/// Returns an error if the function generation fails.
+///
+/// # Arguments
+/// * `f_decl`: A `ForeignItemFn` representing the foreign function declaration.
+/// * `span`:   A `Span` representing the source code span.
+///
+/// # Returns
+/// A `Result<ItemFn>` representing the generated function definition.
+pub(crate) fn gen_lib_version_function(f_decl: ForeignItemFn, span: Span) -> Result<ItemFn> {
+    // Destructure the `ForeignItemFn` to extract the signature, visibility, and attributes.
+    let ForeignItemFn {
+        sig, vis, attrs, ..
+    } = f_decl;
+
+    // Return an `ItemFn` representing the generated function definition.
+    Ok(ItemFn {
+        attrs,
+        vis,
+        sig,
+        block: syn::parse_quote_spanned! {span =>
+            {
+                VERSION.load(::std::sync::atomic::Ordering::Aquire)
             }
         },
     })

@@ -4,14 +4,16 @@ use syn::{
     LitStr, Macro, Result, Visibility,
 };
 
-use super::code_gen::{gen_hot_lib_function_for, gen_lib_change_subscription_function};
+use super::code_gen::{
+    gen_hot_module_function_for, gen_lib_change_subscription_function, gen_lib_version_function,
+};
 use crate::util::read_functions_from_file;
 
 /// Represents a hot-loaded module.
 ///
 /// Structure is used to store information about the hot-loaded library,
 /// including its visibility, identifier, items (such as functions and types), attributes, and
-/// any specific hot-loading attributes defined using the `HotLibAttribute` structure.
+/// any specific hot-loading attributes defined using the `HotMOduleAttribute` structure.
 ///
 /// # Fields
 /// * `vis`:            The visibility of the hot library.
@@ -20,7 +22,7 @@ use crate::util::read_functions_from_file;
 ///                     such as functions, types, and constants.
 /// * `attributes`:     A vector of attributes applied to the hot library,
 ///                     such as `#[no_mangle]` or `#[export_name]`
-/// * `hot_lib_attr`:   An optional `HotLibAttribute` structure that contains specific
+/// * `hot_lib_attr`:   An optional `HotModuleAttribute` structure that contains specific
 ///                     attributes related to the hot library, such as the name of the
 ///                     dynamic library and the debounce duration for file watch events.
 pub(crate) struct HotModule {
@@ -124,9 +126,9 @@ impl syn::parse::Parse for HotModule {
                     // Iterate over each function and its span.
                     for (f, span) in functions {
                         // Generate a hot lib function for each function.
-                        let f = gen_hot_lib_function_for(f, span)?;
+                        let f = gen_hot_module_function_for(f, span)?;
 
-                        // Add the generated function the list of items in the `HotLibrary`.
+                        // Add the generated function the list of items in the `HotModule`.
                         items.push(Item::Fn(f));
                     }
                 }
@@ -152,11 +154,34 @@ impl syn::parse::Parse for HotModule {
                     // Generate the actual function for the library change subscription.
                     let f = gen_lib_change_subscription_function(f, span)?;
 
-                    // Add the generated function to the list of items in the `HotLibrary`.
+                    // Add the generated function to the list of items in the `HotModule`.
                     items.push(Item::Fn(f));
                 }
 
-                //TODO: #[lib_version]
+                // #[lib_version]
+                Item::Fn(func)
+                    if func
+                        .attrs
+                        .iter()
+                        .any(|attr| attr.path().is_ident("lib_version")) =>
+                {
+                    // Get the span of the function.
+                    let span = func.span();
+
+                    // Create a new `ForeignItemFn` based on the parsed function.
+                    let f = ForeignItemFn {
+                        attrs: Vec::new(),
+                        vis: func.vis,
+                        sig: func.sig,
+                        semi_token: token::Semi::default(),
+                    };
+
+                    // Generate the actual function for the library version.
+                    let f = gen_lib_version_function(f, span)?;
+
+                    // Add the generated function to the list of items in the `HotModule`.
+                    items.push(Item::Fn(f));
+                }
 
                 //TODO: #[lib_updated]
 
