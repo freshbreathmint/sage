@@ -40,7 +40,7 @@ impl LibReloader {
     /// Probably `target/debug` normally. `lib_name` is the name of the library, not(!)
     /// the file name. It should normally be just the crate name of the cargo project
     /// you want to hot-reload. `LibReloader` will take care to figure out the actual
-    /// file name with platform-specific prefix and extension. (But not really!)
+    /// file name with platform-specific prefix and extension. (Except macos!)
     pub fn new(
         lib_dir: impl AsRef<Path>,
         lib_name: impl AsRef<str>,
@@ -50,6 +50,16 @@ impl LibReloader {
         // Find the target directory in which the build is happening and where we should find the library.
         let lib_dir = find_file_or_dir_in_parent_directories(lib_dir.as_ref())?;
         log::debug!("found lib dir at {lib_dir:?}"); //TODO: Replace with Sage logging system.
+
+        let load_counter = 0;
+
+        // Determine the paths for the watched and loaded library files.
+        let (watched_lib_file, loaded_lib_file) = watched_and_loaded_library_paths(
+            &lib_dir,
+            &lib_name,
+            load_counter,
+            &loaded_lib_name_template,
+        );
     }
 }
 
@@ -96,4 +106,55 @@ fn find_file_or_dir_in_parent_directories(
         )
         .into())
     }
+}
+
+/// Determines the file paths for the watched and loaded versions of a library.
+///
+/// # Arguments
+/// * `lib_dir`: The directory containing the library.
+/// * `lib_name`: The name of the library, without the platform-specific prefix and extension.
+/// * `load_counter`: A counter used to differentiate between multiple loads of the same library.
+/// * `loaded_lib_name_template`:   An optional template for the name of the loaded library.
+///
+/// # Returns
+/// A tuple containing the paths to the watched and loaded library files.
+fn watched_and_loaded_library_paths(
+    lib_dir: impl AsRef<Path>,
+    lib_name: impl AsRef<str>,
+    load_counter: usize,
+    loaded_lib_name_template: &Option<impl AsRef<str>>,
+) -> (PathBuf, PathBuf) {
+    // Convert the library directory to a Path reference.
+    let lib_dir = &lib_dir.as_ref();
+
+    // Determine the platform specific prefix and extension for the library file.
+    #[cfg(target_os = "linux")]
+    let (prefix, ext) = ("lib", "so");
+    #[cfg(target_os = "windows")]
+    let (prefix, ext) = ("", "dll");
+    // Construct the full library name with the platform-specific prefix.
+    let lib_name = format!("{prefix}{}", lib_name.as_ref());
+
+    // Construct the path to the watched library file.
+    let watched_lib_file = lib_dir.join(&lib_name).with_extension(ext);
+
+    // Construct the file name for the loaded library using a template if provided.
+    let loaded_lib_filename = match loaded_lib_name_template {
+        Some(loaded_lib_name_template) => {
+            let result = loaded_lib_name_template
+                .as_ref()
+                .replace("{lib_name}", &lib_name)
+                .replace("{load_counter}", &load_counter.to_string())
+                .replace("{pid}", &std::process::id().to_string());
+
+            result
+        }
+        None => format!("{lib_name}-hot-{load_counter}"),
+    };
+
+    // Construct the path to the loaded library file.
+    let loaded_lib_file = lib_dir.join(loaded_lib_filename).with_extension(ext);
+
+    // Return the paths to the watched and loaded library files.
+    (watched_lib_file, loaded_lib_file)
 }
