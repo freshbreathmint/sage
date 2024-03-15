@@ -235,6 +235,29 @@ impl syn::parse::Parse for HotModule {
                 }
 
                 // #[hot_functions]
+                Item::ForeignMod(foreign_mod)
+                    if foreign_mod
+                        .attrs
+                        .iter()
+                        .any(|attr| attr.path().is_ident("hot_functions")) =>
+                {
+                    // Loop through each item in the foreign module.
+                    for item in foreign_mod.items {
+                        match item {
+                            // If it's a function, generate a hot function, and push it to the `HotModule`
+                            syn::ForeignItem::Fn(f) => {
+                                let span = f.span();
+                                let f = gen_hot_module_function_for(f, span)?;
+                                items.push(Item::Fn(f));
+                            }
+
+                            // If it's not a function, throw a warning.
+                            _ => {
+                                eprintln!("hot_functions extern block includes unexpected items");
+                            }
+                        }
+                    }
+                }
 
                 // Push the item as it is.
                 item => items.push(item),
