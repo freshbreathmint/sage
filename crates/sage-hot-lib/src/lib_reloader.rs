@@ -2,13 +2,16 @@ use std::{
     fs,
     path::{Path, PathBuf},
     sync::{
-        atomic::{AtomicBool, AtomicU32},
+        atomic::{AtomicBool, AtomicU32, Ordering},
         mpsc, Arc, Mutex,
     },
+    thread,
     time::Duration,
 };
 
 use libloading::Library;
+use notify::{RecursiveMode, Watcher};
+use notify_debouncer_full::new_debouncer;
 
 use crate::{error::HotReloaderError, log};
 
@@ -104,6 +107,128 @@ impl LibReloader {
         };
 
         Ok(lib_loader)
+    }
+
+    /// Watches a library file for changes and notifies subscribers when changes occur.
+    ///
+    /// # Arguments
+    /// * `lib_file` - The path to the library file to watch.
+    /// * `lib_file_hash` - An atomic value representing the current hash of the library file.
+    /// * `changed` - An atomic boolean that is set to true when the library file changes.
+    /// * `file_change_subscribers` - A list of subscribers to notify when the library file changes.
+    /// * `debounce` - The debounce duration to use for file change events.
+    ///
+    /// # Returns
+    /// A `Result` indicating success or failure.
+    fn watch(
+        lib_file: impl AsRef<Path>,
+        lib_file_hash: Arc<AtomicU32>,
+        changed: Arc<AtomicBool>,
+        file_change_subscribers: Arc<Mutex<Vec<mpsc::Sender<()>>>>,
+        debounce: Duration,
+    ) -> Result<(), HotReloaderError> {
+        // Convert the library file path to a `PathBuf` for easier manipulation.
+        let lib_file = lib_file.as_ref().to_path_buf();
+        log::info!("start watching changes of file {}", lib_file.display());
+
+        // Spawn a new thread to watch for file changes.
+        thread::spawn(move || {
+            // Create a channel for receiving file change events.
+            let (tx, rx) = mpsc::channel();
+
+            // Create a debouncer for file change events.
+            let mut debouncer =
+                new_debouncer(debounce, None, tx).expect("creating notify debouncer");
+
+            // Start watching the library for file changes.
+            debouncer
+                .watcher()
+                .watch(&lib_file, RecursiveMode::NonRecursive)
+                .expect("watch lib file");
+
+            // Define a closure to handle change detection and notification.
+            let signal_change = || {
+                // Check if the file hash has changed or if a change is already pending.
+                if hash_file(&lib_file) == lib_file_hash.load(Ordering::Acquire)
+                    || changed.load(Ordering::Acquire)
+                {
+                    return false;
+                }
+
+                log::debug!("{lib_file:?} changed");
+
+                // Set the changed flag to true.
+                changed.store(true, Ordering::Release);
+
+                // Notify all subscribers of the change.
+                let subscribers = file_change_subscribers.lock().unwrap();
+                log::trace!(
+                    "sending ChangedEvent::LibFileChanged to {} subscribers",
+                    subscribers.len()
+                );
+                for tx in &*subscribers {
+                    let _ = tx.send(());
+                }
+
+                true
+            };
+
+            // Enter the event loop to listen for file change events.
+            loop {
+                match rx.recv() {
+                    Err(_) => {
+                        log::info!("file watcher channel closed");
+                        break;
+                    }
+                    Ok(events) => {
+                        let events = match events {
+                            Err(errors) => {
+                                log::error!("{} file watcher error!", errors.len());
+                                for err in errors {
+                                    log::error!("  {err}");
+                                }
+                                continue;
+                            }
+                            Ok(events) => events,
+                        };
+
+                        log::trace!("file change events: {events:?}");
+                        let was_removed =
+                            events
+                                .iter()
+                                .fold(false, |was_removed, event| match event.kind {
+                                    notify::EventKind::Create(_) | notify::EventKind::Modify(_) => {
+                                        false
+                                    }
+                                    notify::EventKind::Remove(_) => true,
+                                    _ => was_removed,
+                                });
+
+                        // If the file was removed, attempt to watch it again.
+                        if was_removed || !lib_file.exists() {
+                            log::debug!(
+                                "{} was removed, trying to watch it again...",
+                                lib_file.display()
+                            );
+                        }
+                        loop {
+                            if debouncer
+                                .watcher()
+                                .watch(&lib_file, RecursiveMode::NonRecursive)
+                                .is_ok()
+                            {
+                                log::info!("watching {lib_file:?} again after removal");
+                                signal_change();
+                                break;
+                            }
+                            thread::sleep(Duration::from_millis(500));
+                        }
+                    }
+                }
+            }
+        });
+
+        Ok(())
     }
 }
 
