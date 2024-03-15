@@ -209,9 +209,32 @@ impl syn::parse::Parse for HotModule {
                     items.push(Item::Fn(f));
                 }
 
-                //TODO: #[hot_function]
+                // #[hot_function]
+                Item::Fn(func)
+                    if func
+                        .attrs
+                        .iter()
+                        .any(|attr| attr.path().is_ident("hot_function")) =>
+                {
+                    // Get the span of the function.
+                    let span = func.span();
 
-                //TODO: #[hot_functions]
+                    // Create a new `ForeignItemFn` based on the parsed function.
+                    let f = ForeignItemFn {
+                        attrs: Vec::new(),
+                        vis: func.vis,
+                        sig: func.sig,
+                        semi_token: token::Semi::default(),
+                    };
+
+                    // Generate the hot module function.
+                    let f = gen_hot_module_function_for(f, span)?;
+
+                    // Add the generated function to the list of items in the `HotModule`.
+                    items.push(Item::Fn(f));
+                }
+
+                // #[hot_functions]
 
                 // Push the item as it is.
                 item => items.push(item),
