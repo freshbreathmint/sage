@@ -49,7 +49,7 @@ impl LibReloader {
     ) -> Result<Self, HotReloaderError> {
         // Find the target directory in which the build is happening and where we should find the library.
         let lib_dir = find_file_or_dir_in_parent_directories(lib_dir.as_ref())?;
-        log::debug!("found lib dir at {lib_dir:?}");
+        log::debug!("found lib dir at {lib_dir:?}"); //TODO: Replace with Sage logging system.
     }
 }
 
@@ -60,4 +60,40 @@ impl LibReloader {
 fn find_file_or_dir_in_parent_directories(
     file: impl AsRef<Path>,
 ) -> Result<PathBuf, HotReloaderError> {
+    // Convert the input to a PathBuf for easier manipulation.
+    let mut file = file.as_ref().to_path_buf();
+
+    // Check if the file doesn't exist and if it's a relative path.
+    if !file.exists() && file.is_relative() {
+        // Get the CWD.
+        if let Ok(cwd) = std::env::current_dir() {
+            // Start with the current directory as the parent directory.
+            let mut parent_dir = Some(cwd.as_path());
+
+            // Iterate up the directory tree.
+            while let Some(dir) = parent_dir {
+                // Check if the file exists in this directory.
+                if dir.join(&file).exists() {
+                    // Update the file path and break the loop.
+                    file = dir.join(&file);
+                    break;
+                }
+                // Move to the parent directory.
+                parent_dir = dir.parent();
+            }
+        }
+    }
+
+    // Check if the file exists after walking up the directories.
+    if file.exists() {
+        // Return the found file path.
+        Ok(file)
+    } else {
+        // Return an error.
+        Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            format!("file {file:?} does not exist"),
+        )
+        .into())
+    }
 }
