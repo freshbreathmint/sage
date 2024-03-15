@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, AtomicU32},
         mpsc, Arc, Mutex,
@@ -8,6 +8,8 @@ use std::{
 };
 
 use libloading::Library;
+
+use crate::{error::HotReloaderError, log};
 
 /// Manages a dynamic library (dylib) file, loads it using libloading::Library,
 /// and provides access to it's symbols. When the library changes, `LibReloader`
