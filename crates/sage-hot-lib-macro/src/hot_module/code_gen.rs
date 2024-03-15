@@ -5,6 +5,35 @@ use syn::{
 
 use crate::util::ident_from_pat;
 
+/// Generates the ncessary items for dynamically loading a library
+/// and handling file changes to trigger hot reloading.
+///
+/// This function creates several static variables and functions:
+/// - `LIB_CHANGE_NOTIFIER`: A static variable to hold the library change notifier.
+/// - `LIB_CHANGE_NOTIFIER_INIT`: Initialization control for the library change notifier.
+/// - `__lib_notifier()`: A function to access or initialize the library change notifier.
+/// - `__lib_loader_subscription()`: A function to subscribe to library reload events.
+/// - `LIB_LOADER`: A static variable that stores a library loader object.
+/// - `LIB_LOADER_INIT`: Initialization control for the library loader object.
+/// - `VERSION`: A version counter for reloads.
+/// - `WAS_UPDATED`: A flag for indicating if an update occurred.
+/// - `__lib_loader()`: A function to access or initialize the library loader.
+///
+/// The function also spawns a new thread to listen for file change events and reload the library.
+///
+/// # Arguments
+/// * `lib_dir`:                    Expression representing the directory containing the library.
+/// * `lib_name`:                   Expression representing the name of the library.
+/// * `file_watch_debounce_ms`:     Literal integer representing the debounce time in milliseconds for file change events.
+/// * `crate_name` -                Path representing the name of the crate.
+/// * `loaded_lib_name_template`:   Expression representing the template for the loaded library name.
+/// * `span`:                       Span used for generating the code with proper source location information.
+///
+/// # Returns
+/// A `TokenStream` representing the generated items for library loading and change notification.
+///
+/// # Errors
+/// Returns an error if any part of the generation process fails.
 pub(crate) fn generate_lib_loader_items(
     lib_dir: &Expr,
     lib_name: &Expr,
