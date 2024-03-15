@@ -98,7 +98,7 @@ impl syn::parse::Parse for HotModuleAttribute {
                     // If the left side is ident: "crate", parse the right side as a string literal.
                     expr if expr_is_ident(&left, "crate") => {
                         // Get the span of the expression for error reporting.
-                        let span = expr.span().clone();
+                        let span = expr.span();
 
                         // Nested `match` statements to extract and validate the string literal.
                         // The outer `match` checks if expression is a literal expression.

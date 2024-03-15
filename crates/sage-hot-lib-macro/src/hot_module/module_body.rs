@@ -33,6 +33,7 @@ pub(crate) struct HotModule {
     pub(crate) vis: Visibility,
     pub(crate) ident: Ident,
     pub(crate) items: Vec<Item>,
+    #[allow(dead_code)]
     pub(crate) attributes: Vec<Attribute>,
     pub(crate) hot_mod_attr: Option<super::HotModuleAttribute>,
 }
