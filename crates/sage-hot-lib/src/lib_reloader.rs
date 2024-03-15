@@ -65,7 +65,8 @@ impl LibReloader {
         // Load the library and calculate its hash if it exists.
         let (lib_file_hash, lib) = if watched_lib_file.exists() {
             log::debug!("copying {watched_lib_file:?} -> {loaded_lib_file:?}"); //TODO: Replace logging.
-                                                                                // Copy the library file to avoid file lock issues on some platforms (not implemented)
+
+            // Copy the library file to avoid file lock issues on some platforms (not implemented)
             fs::copy(&watched_lib_file, &loaded_lib_file)?;
             let hash = hash_file(&loaded_lib_file);
             (hash, Some(load_library(&loaded_lib_file)?))
@@ -73,6 +74,36 @@ impl LibReloader {
             log::debug!("library {watched_lib_file:?} does not yet exist");
             (0, None)
         };
+
+        // Set up variables for tracking changes to the library file.
+        let lib_file_hash = Arc::new(AtomicU32::new(lib_file_hash));
+        let changed = Arc::new(AtomicBool::new(false));
+        let file_change_subscribers = Arc::new(Mutex::new(Vec::new()));
+
+        // Start watching the library file for changes.
+        Self::watch(
+            watched_lib_file.clone(),
+            lib_file_hash.clone(),
+            changed.clone(),
+            file_change_subscribers.clone(),
+            file_watch_debounce.unwrap_or_else(|| Duration::from_millis(500)),
+        )?;
+
+        // Initialize the `LibReloader` instance with the gathered information.
+        let lib_loader = Self {
+            load_counter,
+            lib_dir,
+            lib_name: lib_name.as_ref().to_string(),
+            watched_lib_file,
+            loaded_lib_file,
+            lib,
+            lib_file_hash,
+            changed,
+            file_change_subscribers,
+            loaded_lib_name_template,
+        };
+
+        Ok(lib_loader)
     }
 }
 
@@ -135,6 +166,21 @@ fn hash_file(f: impl AsRef<Path>) -> u32 {
     fs::read(f.as_ref())
         .map(|content| crc32fast::hash(&content))
         .unwrap_or_default()
+}
+
+/// Loads a dynamic library at runtime.
+///
+/// Use `libloading` to load a dynamic library from the specified file path.
+/// The function is marked as `unsafe` because loading arbitrary libraries at runtime can lead to
+/// undefined behavior if the library is not compatible or if it contains malicious code.
+///
+/// # Arguments
+/// * `lib_file` - The path to the dynamic library file to be loaded.
+///
+/// # Returns
+/// A `Result` containing the loaded `Library` on success, or a `HotReloaderError` on failure.
+fn load_library(lib_file: impl AsRef<Path>) -> Result<Library, HotReloaderError> {
+    Ok(unsafe { Library::new(lib_file.as_ref()) }?)
 }
 
 /// Determines the file paths for the watched and loaded versions of a library.
