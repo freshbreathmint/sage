@@ -4,9 +4,13 @@ use syn::{
     LitStr, Macro, Result, Visibility,
 };
 
-use super::code_gen::{
-    gen_hot_module_function_for, gen_lib_change_subscription_function, gen_lib_version_function,
-    gen_lib_was_updated_function,
+use super::{
+    attribute,
+    code_gen::{
+        gen_hot_module_function_for, gen_lib_change_subscription_function,
+        gen_lib_version_function, gen_lib_was_updated_function,
+    },
+    HotModuleAttribute,
 };
 use crate::util::read_functions_from_file;
 
@@ -290,5 +294,56 @@ impl syn::parse::Parse for HotModule {
             attributes,
             hot_mod_attr: None,
         })
+    }
+}
+
+/// Implements the `quote::ToTokens` trait for the `HotModule` struct.
+///
+/// Converts the `HotModule` instance into a token stream that represents Rust code.
+impl quote::ToTokens for HotModule {
+    fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
+        // Destructure `HotModule`.
+        let Self {
+            vis,
+            ident,
+            items,
+            hot_mod_attr,
+            ..
+        } = self;
+
+        // Extract the macro attributes and store them in local variables.
+        let HotModuleAttribute {
+            lib_name,
+            lib_dir,
+            file_watch_debounce_ms,
+            crate_name,
+            loaded_lib_name_template,
+        } = match hot_mod_attr {
+            None => panic!("Expected to have macro attributes"),
+            Some(attributes) => attributes,
+        };
+
+        // Generate the code for the dynamic library loading and store it in `lib_loader`.
+        let lib_loader = generate_lib_loader_items(
+            lib_dir,
+            lib_name,
+            file_watch_debounce_ms,
+            crate_name,
+            loaded_lib_name_template,
+            tokens.span(),
+        )
+        .expect("error generating hot lib loader helpers");
+
+        // Generate the code for the module.
+        let module_def = quote::quote! {
+            #vis mod #ident {
+                #( #items )*
+
+                #lib_loader
+            }
+        };
+
+        // Append the generated module definition to the token stream.
+        proc_macro2::TokenStream::extend(tokens, module_def);
     }
 }
