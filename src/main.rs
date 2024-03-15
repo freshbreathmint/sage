@@ -1,7 +1,8 @@
-fn main() {
-    test_fn();
+#[sage_hot_lib::hot_lib(dylib = "test")]
+mod hot_lib {
+    hot_functions_from_file!("crates/test/src/lib.rs");
 }
 
-fn test_fn() {
-    println!("Hello, Sage!");
+fn main() {
+    hot_lib::test();
 }

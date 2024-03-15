@@ -25,6 +25,7 @@ name = "sage"
 version = "0.0.2-dev"
 dependencies = [
  "sage-hot-lib",
+ "test",
 ]
 
 [[package]]
@@ -53,6 +54,10 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "test"
+version = "0.0.2-dev"
 
 [[package]]
 name = "unicode-ident"

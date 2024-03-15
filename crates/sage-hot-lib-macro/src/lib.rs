@@ -1,6 +1,7 @@
 mod hot_module;
 mod util;
 
+/// Top level interface for the sage dynamic Rust library hot reloader.
 #[proc_macro_attribute]
 pub fn hot_lib(
     attr: proc_macro::TokenStream,
