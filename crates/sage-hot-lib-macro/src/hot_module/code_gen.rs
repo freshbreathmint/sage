@@ -160,3 +160,22 @@ pub(crate) fn gen_lib_version_function(f_decl: ForeignItemFn, span: Span) -> Res
         },
     })
 }
+
+pub(crate) fn gen_lib_was_updated_function(f_decl: ForeignItemFn, span: Span) -> Result<ItemFn> {
+    // Destructure the `ForeignItemFn` to extract the signature, visibility, and attributes.
+    let ForeignItemFn {
+        sig, vis, attrs, ..
+    } = f_decl;
+
+    // Return an `ItemFn` representing the generated function definition.
+    Ok(ItemFn {
+        attrs,
+        vis,
+        sig,
+        block: syn::parse_quote_spanned! {span =>
+            {
+                WAS_UPDATED.swap(false,::std::sync::atomic::Ordering::AcqRel)
+            }
+        },
+    })
+}

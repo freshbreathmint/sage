@@ -6,6 +6,7 @@ use syn::{
 
 use super::code_gen::{
     gen_hot_module_function_for, gen_lib_change_subscription_function, gen_lib_version_function,
+    gen_lib_was_updated_function,
 };
 use crate::util::read_functions_from_file;
 
@@ -183,7 +184,30 @@ impl syn::parse::Parse for HotModule {
                     items.push(Item::Fn(f));
                 }
 
-                //TODO: #[lib_updated]
+                // #[lib_updated]
+                Item::Fn(func)
+                    if func
+                        .attrs
+                        .iter()
+                        .any(|attr| attr.path().is_ident("lib_updated")) =>
+                {
+                    // Get the span of the function.
+                    let span = func.span();
+
+                    // Create a new `ForeignItemFn` based on the parsed function.
+                    let f = ForeignItemFn {
+                        attrs: Vec::new(),
+                        vis: func.vis,
+                        sig: func.sig,
+                        semi_token: token::Semi::default(),
+                    };
+
+                    // Generate the actual function for the library update status.
+                    let f = gen_lib_was_updated_function(f, span)?;
+
+                    // Add the generated function to the list of items in the `HotModule`.
+                    items.push(Item::Fn(f));
+                }
 
                 //TODO: #[hot_function]
 
