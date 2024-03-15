@@ -1,7 +1,52 @@
 use proc_macro2::Span;
-use syn::{FnArg, ForeignItemFn, Item, ItemFn, LitByteStr, LitStr, Result, Visibility};
+use syn::{
+    Expr, FnArg, ForeignItemFn, ItemFn, LitByteStr, LitInt, LitStr, Path, Result, Visibility,
+};
 
 use crate::util::ident_from_pat;
+
+pub(crate) fn generate_lib_loader_items(
+    lib_dir: &Expr,
+    lib_name: &Expr,
+    file_watch_debounce_ms: &LitInt,
+    crate_name: &Path,
+    loaded_lib_name_template: &Expr,
+    span: Span,
+) -> Result<proc_macro2::TokenStream> {
+    let result = quote::quote_spanned! {span=>
+        // Global variables for library change notification:
+
+        // Static variable to hold the library change notifier.
+        static mut LIB_CHANGE_NOTIFIER: Option<::std::sync::Arc<::std::sync::RwLock<#crate_name::LibReloadNotifier>>> = None;
+        // Initialization control for the library change notifier.
+        static LIB_CHANGE_NOTIFIER_INIT: ::std::sync::Once = ::std::sync::Once::new();
+
+        // Function to access or initialize the library change notifier.
+        fn __lib_notifier() -> ::std::sync::Arc<::std::sync::RwLock<#crate_name::LibReloadNotifier>> {
+            // Initialize the notifier once.
+            LIB_CHANGE_NOTIFIER_INIT.call_once(|| {
+                let notifier = ::std::sync::Arc::new(::std::sync::RwLock::new(Default::default()));
+                // Safety: This block is guarded by Once and will be called only one time.
+                unsafe {
+                    use ::std::borrow::BorrowMut;
+                    *LIB_CHANGE_NOTIFIER.borrow_mut() = Some(notifier);
+                }
+            });
+
+            // Return the notifier.
+            // Safety: `Once` ensures that the global is initialized before access.
+            unsafe { LIB_CHANGE_NOTIFIER.as_ref().cloned().unwrap() }
+        }
+
+        // Function to subscribe to library reload events.
+
+        //TODO: Global Variables for Library Loading
+        //TODO: Library Loader Function
+
+    };
+
+    Ok(result)
+}
 
 /// Generates a hot-loading wrapper function for a given module function.
 ///

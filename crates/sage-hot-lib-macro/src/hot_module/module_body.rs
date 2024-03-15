@@ -5,10 +5,9 @@ use syn::{
 };
 
 use super::{
-    attribute,
     code_gen::{
         gen_hot_module_function_for, gen_lib_change_subscription_function,
-        gen_lib_version_function, gen_lib_was_updated_function,
+        gen_lib_version_function, gen_lib_was_updated_function, generate_lib_loader_items,
     },
     HotModuleAttribute,
 };
