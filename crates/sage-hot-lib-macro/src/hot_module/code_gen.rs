@@ -161,6 +161,18 @@ pub(crate) fn gen_lib_version_function(f_decl: ForeignItemFn, span: Span) -> Res
     })
 }
 
+/// Generates a function that returns the update status of the library.
+///
+/// Takes a foreign function declaration and a span,
+/// generates a new function that returns the update status of a library
+/// Returns an error if the function generation fails.
+///
+/// # Arguments
+/// * `f_decl`: A `ForeignItemFn` representing the foreign function declaration.
+/// * `span`:   A `Span` representing the source code span.
+///
+/// # Returns
+/// A `Result<ItemFn>` representing the generated function definition.
 pub(crate) fn gen_lib_was_updated_function(f_decl: ForeignItemFn, span: Span) -> Result<ItemFn> {
     // Destructure the `ForeignItemFn` to extract the signature, visibility, and attributes.
     let ForeignItemFn {
