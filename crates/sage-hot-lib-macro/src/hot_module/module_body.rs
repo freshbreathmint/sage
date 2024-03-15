@@ -23,7 +23,7 @@ use crate::util::read_functions_from_file;
 ///                     such as functions, types, and constants.
 /// * `attributes`:     A vector of attributes applied to the hot library,
 ///                     such as `#[no_mangle]` or `#[export_name]`
-/// * `hot_lib_attr`:   An optional `HotModuleAttribute` structure that contains specific
+/// * `hot_mod_attr`:   An optional `HotModuleAttribute` structure that contains specific
 ///                     attributes related to the hot library, such as the name of the
 ///                     dynamic library and the debounce duration for file watch events.
 pub(crate) struct HotModule {
@@ -31,9 +31,27 @@ pub(crate) struct HotModule {
     pub(crate) ident: Ident,
     pub(crate) items: Vec<Item>,
     pub(crate) attributes: Vec<Attribute>,
-    pub(crate) hot_lib_attr: Option<super::HotModuleAttribute>,
+    pub(crate) hot_mod_attr: Option<super::HotModuleAttribute>,
 }
 
+/// Implement the `Parse` trait for `HotModule` to enable parsing.
+///
+/// Allows for the parsing of a `HotModule` from a `ParseStream`.
+/// The `HotModule` contains:
+/// - Outer attributes.
+/// - Visibility modifier. (Defaults to `Inherited` if not specified)
+/// - Module identifier.
+/// - Items inside the module, which can include:
+///     - Hot functions generated from a file using `hot_functions_from_file!()` macro.
+///     - Functions annotated with the following:
+///         - `#[lib_change_subscription]`.
+///         - `#[lib_version]`.
+///         - `#[lib_updated]`.
+///         - `#[hot_function]`.
+///     - Functions inside a foreign module annotated with `#[hot_functions]`.
+///
+/// # Errors
+/// Returns an error if the syntax is incorrect or if there are issues parsing the items inside the module.
 impl syn::parse::Parse for HotModule {
     fn parse(stream: syn::parse::ParseStream) -> Result<Self> {
         // Parse the outer attributes of the module and store them.
@@ -270,7 +288,7 @@ impl syn::parse::Parse for HotModule {
             ident,
             items,
             attributes,
-            hot_lib_attr: None,
+            hot_mod_attr: None,
         })
     }
 }
