@@ -7,7 +7,7 @@ use syn::{
 use super::code_gen::{gen_hot_lib_function_for, gen_lib_change_subscription_function};
 use crate::util::read_functions_from_file;
 
-/// Represents a hot-loaded library.
+/// Represents a hot-loaded module.
 ///
 /// Structure is used to store information about the hot-loaded library,
 /// including its visibility, identifier, items (such as functions and types), attributes, and
@@ -23,15 +23,15 @@ use crate::util::read_functions_from_file;
 /// * `hot_lib_attr`:   An optional `HotLibAttribute` structure that contains specific
 ///                     attributes related to the hot library, such as the name of the
 ///                     dynamic library and the debounce duration for file watch events.
-pub(crate) struct HotLibrary {
+pub(crate) struct HotModule {
     pub(crate) vis: Visibility,
     pub(crate) ident: Ident,
     pub(crate) items: Vec<Item>,
     pub(crate) attributes: Vec<Attribute>,
-    pub(crate) hot_lib_attr: Option<super::HotLibAttribute>,
+    pub(crate) hot_lib_attr: Option<super::HotModuleAttribute>,
 }
 
-impl syn::parse::Parse for HotLibrary {
+impl syn::parse::Parse for HotModule {
     fn parse(stream: syn::parse::ParseStream) -> Result<Self> {
         // Parse the outer attributes of the module and store them.
         let attributes = Attribute::parse_outer(stream)?;
@@ -169,7 +169,7 @@ impl syn::parse::Parse for HotLibrary {
             };
         }
 
-        // Construct a new `HotLibrary` with the parsed quality.
+        // Construct a new `HotModule` with the parsed quality.
         Ok(Self {
             vis,
             ident,

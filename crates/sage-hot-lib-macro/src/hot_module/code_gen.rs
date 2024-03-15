@@ -93,6 +93,18 @@ pub(crate) fn gen_hot_lib_function_for(lib_function: ForeignItemFn, span: Span) 
     Ok(function)
 }
 
+/// Generates a function that subscribes to library changes.
+///
+/// Takes a foreign function declaration and a span,
+/// generates a new function that subscribes to library changes.
+/// Returns an error if the function generation fails.
+///
+/// # Arguments
+/// * `f_decl`: A `ForeignItemFn` representing the foreign function declaration.
+/// * `span`:   A `Span` representing the source code span.
+///
+/// # Returns
+/// A `Result<ItemFn>` representing the generated function definition.
 pub(crate) fn gen_lib_change_subscription_function(
     f_decl: ForeignItemFn,
     span: Span,

@@ -3,7 +3,7 @@ use syn::{
     ExprPath, Ident, Lit, LitInt, Path, Result,
 };
 
-/// Represents the attributes of a hot-loaded library.
+/// Represents the attributes of a hot-loaded module.
 ///
 /// Structure is used to store the parsed attributes from a procedural macro input.
 /// Each field corresponds to an attribute that can be specified in the macro.
@@ -15,7 +15,7 @@ use syn::{
 /// * `crate_name`:                 A path representing the crate name associated with the dynamic library.
 /// * `loaded_lib_name_template`:   An expression representing a template for generating the name
 ///                                 of the loaded library.
-pub(crate) struct HotLibAttribute {
+pub(crate) struct HotModuleAttribute {
     pub(crate) lib_name: Expr,
     pub(crate) lib_dir: Expr,
     pub(crate) file_watch_debounce_ms: LitInt,
@@ -23,9 +23,9 @@ pub(crate) struct HotLibAttribute {
     pub(crate) loaded_lib_name_template: Expr,
 }
 
-/// Implement the `Parse` trait for `HotLibAttribute` to enable parsing.
+/// Implement the `Parse` trait for `HotModuleAttribute` to enable parsing.
 ///
-/// Allows for the parsing of `HotLibAttribute` structures from procedural macro input.
+/// Allows for the parsing of `HotModuleAttribute` structures from procedural macro input.
 /// It expects a series of assignment expressions seperated by commas, with specific attribute
 /// names (`dylib`, `lib_dir`, `file_watch_debounce`, `crate` and `loaded_lib_name_template`).
 /// Each attribute is optional, but if provided, it must adhear to the expected value type.
@@ -40,9 +40,9 @@ pub(crate) struct HotLibAttribute {
 /// # Errors
 /// Returns an error if the input does not conform to the expected format,
 /// or if the required attributes are missing or have incorrect types.
-impl syn::parse::Parse for HotLibAttribute {
+impl syn::parse::Parse for HotModuleAttribute {
     fn parse(stream: syn::parse::ParseStream) -> Result<Self> {
-        // Initialize optional HotLibAttribute fields to `None`.
+        // Initialize optional HotModuleAttribute fields to `None`.
         let mut lib_name = None;
         let mut lib_dir = None;
         let mut file_watch_debounce_ms = None;
@@ -176,8 +176,8 @@ impl syn::parse::Parse for HotLibAttribute {
             }
         };
 
-        // Return the parsed `HotLibAttribute`.
-        Ok(HotLibAttribute {
+        // Return the parsed `HotModuleAttribute`.
+        Ok(HotModuleAttribute {
             lib_name,
             lib_dir,
             file_watch_debounce_ms,
