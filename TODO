@@ -1,7 +1,8 @@
 # TODO
 
 Current:
-    - Start work on the LibReloader portion of the code.
+    - Finish the rest of the lib_reloader file.
+    - Figure out what other things the errors might be coming from?
     - Build the rest of the hot reloading library until the default example works.
     - Expand on the example code in main until you have a nicely bespoke version.
     - Fulfill the rest of the requirements in the 0.0.2 doc.

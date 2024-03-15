@@ -109,6 +109,10 @@ impl LibReloader {
         Ok(lib_loader)
     }
 
+    //TODO: Subscribe to file changes
+    //TODO: Update
+    //TODO: Reload
+
     /// Watches a library file for changes and notifies subscribers when changes occur.
     ///
     /// # Arguments
@@ -230,7 +234,12 @@ impl LibReloader {
 
         Ok(())
     }
+
+    //TODO: get symbol
+    //TODO: log_info
 }
+
+//TODO: Impl Drop for LibReloader
 
 /// Try to find a file or directory that might be a relative path, such as `target/debug`,
 /// by walking up the directories, starting from the current working directory (CWD). This
