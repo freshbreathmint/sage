@@ -15,7 +15,6 @@ pub(crate) fn generate_lib_loader_items(
 ) -> Result<proc_macro2::TokenStream> {
     let result = quote::quote_spanned! {span=>
         // Global variables for library change notification:
-
         // Static variable to hold the library change notifier.
         static mut LIB_CHANGE_NOTIFIER: Option<::std::sync::Arc<::std::sync::RwLock<#crate_name::LibReloadNotifier>>> = None;
         // Initialization control for the library change notifier.
@@ -39,10 +38,98 @@ pub(crate) fn generate_lib_loader_items(
         }
 
         // Function to subscribe to library reload events.
+        fn __lib_loader_subscription() -> #crate_name::LibReloadObserver {
+            // Ensure library loader is initialized.
+            let _ = __lib_loader();
+            // Subscribe to reload events and return the observer.
+            __lib_notifier()
+                .write()
+                .expect("write lock notifier")
+                .subscribe()
+        }
 
-        //TODO: Global Variables for Library Loading
-        //TODO: Library Loader Function
+        // Global variables for library loading:
+        // Static variable that stores a library loader object.
+        static mut LIB_LOADER: Option<::std::sync::Arc<::std::sync::RwLock<#crate_name::LibReloader>>> = None;
+        // Initialization control for the library loader object.
+        static LIB_LOADER_INIT: ::std::sync::Once = ::std::sync::Once::new();
 
+        // Version counter for reloads.
+        static VERSION: ::std::sync::atomic::AtomicUsize = ::std::sync::atomic::AtomicUsize::new(0);
+        // Flag for indicating if an update occurred.
+        static WAS_UPDATED: ::std::sync::atomic::AtomicBool = ::std::sync::atomic::AtomicBool::new(false);
+
+        // Function to access or initialize the library loader.
+        fn __lib_loader() -> ::std::sync::Arc<::std::sync::RwLock<#crate_name::LibReloader>> {
+            // Initialize the loader once.
+            LIB_LOADER_INIT.call_once(|| {
+                // Create a new library reloader with the specified parameters.
+                let mut lib_loader = #crate_name::LibReloader::new(#lib_dir, #lib_name, Some(::std::time::Duration::from_millis(#file_watch_debounce_ms)), #loaded_lib_name_template)
+                    .expect("failed to create hot reload loader");
+
+                // Subscribe to file change events and recieve a channel to listen for changes.
+                let change_rx = lib_loader.subscribe_to_file_changes();
+                // Wrap the library folder in an `Arc<RwLock>` for thread-safe access and mutation
+                let lib_loader = ::std::sync::Arc::new(::std::sync::RwLock::new(lib_loader));
+                // Clone the `Arc` to use in the update thread.
+                let lib_loader_for_update = lib_loader.clone();
+
+                // Spawn a new thread to listen for file change events and reload the library.
+                let _thread = ::std::thread::spawn(move || {
+                    loop {
+                        // Wait for a file change event.
+                        if let Ok(()) = change_rx.recv() {
+                            // Notify subscribers about the impending library reload.
+                            __lib_notifier()
+                                .read()
+                                .expect("read lock notifier")
+                                .send_about_to_reload_event_and_wait_for_blocks();
+
+                            // Attempt to aquire a write lock on the library loader to perform the update.
+                            let mut first_lock_attempt = None;
+                            loop {
+                                if let Ok(mut lib_loader) = lib_loader_for_update.try_write() {
+                                    if let Some(first_lock_attempt) = first_lock_attempt {
+                                        let duration: ::std::time::Duration = first_lock_attempt - ::std::time::Instant::now();
+                                        #crate_name::LibReloader::log_info(&format!("...got write lock after {}ms!", duration.as_millis()));
+                                    }
+                                    // Perform the library update.
+                                    let _ = !lib_loader.update().expect("hot lib update()");
+                                    break;
+                                }
+                                // If the write lock cannot be aquired immediately, record the first attempt time and try again.
+                                if first_lock_attempt.is_none() {
+                                    first_lock_attempt = Some(::std::time::Instant::now());
+                                    #crate_name::LibReloader::log_info("trying to get a write lock...");
+                                }
+                                // Sleep for a short duration before retrying to aquire the write lock.
+                                ::std::thread::sleep(::std::time::Duration::from_millis(1));
+                            }
+
+                            // Increment the version counter and mark the library as updated.
+                            VERSION.fetch_add(1, ::std::sync::atomic::Ordering::Release);
+                            WAS_UPDATED.store(true, ::std::sync::atomic::Ordering::Release);
+
+                            // Notify subscribers that the library has been reloaded.
+                            __lib_notifier()
+                                .read()
+                                .expect("read lock notifier")
+                                .send_reloaded_event();
+                        }
+                    }
+                });
+
+                // Store the library loader in the global variable for later access.
+                // Safety: This block is protected by `Once` and will only be executed once.
+                unsafe {
+                    use ::std::borrow::BorrowMut;
+                    *LIB_LOADER.borrow_mut() = Some(lib_loader);
+                }
+            });
+
+            // Safety: Once runs before and initializes the global.
+            unsafe { LIB_LOADER.as_ref().cloned().unwrap() }
+        }
     };
 
     Ok(result)
