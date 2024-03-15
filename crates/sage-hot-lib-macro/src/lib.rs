@@ -8,4 +8,7 @@ pub fn hot_lib(
 ) -> proc_macro::TokenStream {
     let attr = syn::parse_macro_input!(attr as hot_module::HotModuleAttribute);
     let mut module = syn::parse_macro_input!(item as hot_module::HotModule);
+    module.hot_mod_attr = Some(attr);
+
+    (quote::quote!( #module )).into()
 }
