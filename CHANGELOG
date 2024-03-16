@@ -3,7 +3,7 @@
 ## IN DEVELOPMENT
 
 Changes:
-    - Started work on the hot reloader procedural macro library.
+    - Working on implementing a hot reloading library.
 
 ## Version 0.0.1
 
