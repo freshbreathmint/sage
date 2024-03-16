@@ -1,6 +1,6 @@
-#[sage_hot_lib::hot_lib(dylib = "test")]
+#[sage_hot_lib::hot_lib(dylib = "lib")]
 mod hot_lib {
-    hot_functions_from_file!("crates/test/src/lib.rs");
+    hot_functions_from_file!("crates/lib/src/lib.rs");
 }
 
 fn main() {

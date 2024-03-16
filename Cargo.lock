@@ -121,6 +121,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib"
+version = "0.0.2-dev"
+
+[[package]]
 name = "libc"
 version = "0.2.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -251,8 +255,8 @@ dependencies = [
 name = "sage"
 version = "0.0.2-dev"
 dependencies = [
+ "lib",
  "sage-hot-lib",
- "test",
 ]
 
 [[package]]
@@ -307,10 +311,6 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
-
-[[package]]
-name = "test"
-version = "0.0.2-dev"
 
 [[package]]
 name = "thiserror"
