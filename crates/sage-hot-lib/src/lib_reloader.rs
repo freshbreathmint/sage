@@ -109,9 +109,111 @@ impl LibReloader {
         Ok(lib_loader)
     }
 
-    //TODO: Subscribe to file changes
-    //TODO: Update
-    //TODO: Reload
+    /// Subscribes to file change notifications.
+    /// Public because it is utilized by the `hot_lib` macro.
+    pub fn subscribe_to_file_changes(&mut self) -> mpsc::Receiver<()> {
+        log::trace!("subscribe to file change");
+        // Create a channel, lock the mutex.
+        let (tx, rx) = mpsc::channel();
+        let mut subscribers = self.file_change_subscribers.lock().unwrap();
+        // Add the sender to the list of subscribers, return the reciever.
+        subscribers.push(tx);
+        rx
+    }
+
+    /// Checks if the watched library has changed and reloads it if necessary.
+    ///
+    /// Checks the `changed` flag to determine if the watched library has been modified.
+    /// If the library has been changed, it reloads the library and returns `true` to indicate
+    /// that an update has occurred. If the library has not changed, it returns `false`.
+    ///
+    /// # Errors
+    /// Returns a `HotReloaderError` if the library fails to reload.
+    ///
+    /// # Returns
+    /// `Ok(true)` if the library was successfully reloaded,
+    /// `Ok(false)` if the library has not changed, or
+    /// `Err(HotReloaderError)` if an error occurred during reloading.
+    pub fn update(&mut self) -> Result<bool, HotReloaderError> {
+        // Check if the library has changed using an atomic load with Acquire ordering for thread-safe reading.
+        if !self.changed.load(Ordering::Acquire) {
+            // If the library has not changed, return `Ok(false)` immediately.
+            return Ok(false);
+        }
+
+        // If the library has changed, reset the `changed` flag to false using an atomic store
+        // with Release ordering to ensure subsequent operations see this update.
+        self.changed.store(false, Ordering::Release);
+
+        // Attempt to reload the library. If an error occurs during reloading,
+        // propagate the error to the caller using the `?` operator.
+        self.reload()?;
+
+        // If the library was successfully reloaded, return `Ok(true)`.
+        Ok(true)
+    }
+
+    /// Reloads the library specified by `self.lib_file`.
+    ///
+    /// Closes the currently loaded library, if any, copies the new library file
+    /// to a location where it can be loaded, and loads the copied library file.
+    ///
+    /// # Returns
+    /// A `Result` indicating the success or failure of the reload operation. If successful,
+    /// returns `Ok(())`. If the library cannot be reloaded, returns an `Err` with a `HotReloaderError`.
+    fn reload(&mut self) -> Result<(), HotReloaderError> {
+        let Self {
+            load_counter,
+            lib_dir,
+            lib_name,
+            lib,
+            watched_lib_file,
+            loaded_lib_file,
+            loaded_lib_name_template,
+            ..
+        } = self;
+
+        log::info!("reloading lib {watched_lib_file:?}");
+
+        // If a library is currently loaded, close it and remove the file if it exists.
+        if let Some(lib) = lib.take() {
+            lib.close()?;
+            if loaded_lib_file.exists() {
+                let _ = fs::remove_file(&loaded_lib_file);
+            }
+        }
+
+        // If the library file to watch exists, proceed with reloading.
+        if watched_lib_file.exists() {
+            *load_counter += 1; // Increment the load counter for the new library version.
+
+            // Determine the paths for the watched and loaded library files.
+            let (_, loaded_lib_file) = watched_and_loaded_library_paths(
+                lib_dir,
+                lib_name,
+                *load_counter,
+                loaded_lib_name_template,
+            );
+
+            // Copy the watched library file to the location for loading.
+            log::trace!("copy {watched_lib_file:?} -> {loaded_lib_file:?}");
+            fs::copy(watched_lib_file, &loaded_lib_file)?;
+
+            // Store the hash of the loaded library file for change detection.
+            self.lib_file_hash
+                .store(hash_file(&loaded_lib_file), Ordering::Release);
+
+            // Load the copied library file and store the handle.
+            self.lib = Some(load_library(&loaded_lib_file)?);
+
+            // Update the loaded library file path.
+            self.loaded_lib_file = loaded_lib_file;
+        } else {
+            log::warn!("trying to reload library but it does not exist");
+        }
+
+        Ok(())
+    }
 
     /// Watches a library file for changes and notifies subscribers when changes occur.
     ///
