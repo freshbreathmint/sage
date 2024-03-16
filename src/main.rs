@@ -4,5 +4,7 @@ mod hot_lib {
 }
 
 fn main() {
-    hot_lib::test();
+    loop {
+        hot_lib::test();
+    }
 }

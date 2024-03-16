@@ -252,6 +252,7 @@ name = "sage"
 version = "0.0.2-dev"
 dependencies = [
  "sage-hot-lib",
+ "test",
 ]
 
 [[package]]
