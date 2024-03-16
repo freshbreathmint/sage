@@ -9,7 +9,7 @@ use std::{
     time::Duration,
 };
 
-use libloading::Library;
+use libloading::{Library, Symbol};
 use notify::{RecursiveMode, Watcher};
 use notify_debouncer_full::new_debouncer;
 
@@ -337,11 +337,38 @@ impl LibReloader {
         Ok(())
     }
 
-    //TODO: get symbol
-    //TODO: log_info
+    /// Get a pointer to a function or static variable by symbol name.
+    /// Just a wrapper around `libloading::Library::get`.
+    ///
+    /// The `symbol` may not contain any null bytes, with the exception of
+    /// the last byte. Providing a null-terminated `symbol` may help to
+    /// avoid an allocation. The symbol is interpreted as is, no mangling.
+    ///
+    /// # Safety
+    /// Users of this API must specify the correct type of the function or variable loaded.
+    pub unsafe fn get_symbol<T>(&self, name: &[u8]) -> Result<Symbol<T>, HotReloaderError> {
+        match &self.lib {
+            None => Err(HotReloaderError::LibraryNotLoaded),
+            Some(lib) => Ok(lib.get(name)?),
+        }
+    }
+
+    /// Logging helper for the hot lib macro.
+    /// TODO: Replace with Sage logging system.
+    pub fn log_info(what: impl std::fmt::Display) {
+        log::info!("{}", what);
+    }
 }
 
-//TODO: Impl Drop for LibReloader
+/// Deletes the currently loaded lib file if it exists.
+impl Drop for LibReloader {
+    fn drop(&mut self) {
+        if self.loaded_lib_file.exists() {
+            log::trace!("removing {:?}", self.loaded_lib_file);
+            let _ = fs::remove_file(&self.loaded_lib_file);
+        }
+    }
+}
 
 /// Try to find a file or directory that might be a relative path, such as `target/debug`,
 /// by walking up the directories, starting from the current working directory (CWD). This
