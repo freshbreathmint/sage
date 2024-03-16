@@ -74,7 +74,7 @@ impl LibReloader {
             let hash = hash_file(&loaded_lib_file);
             (hash, Some(load_library(&loaded_lib_file)?))
         } else {
-            log::debug!("library {watched_lib_file:?} does not yet exist");
+            log::debug!("library {watched_lib_file:?} does not yet exist"); //TODO: Replace logging.
             (0, None)
         };
 
@@ -112,8 +112,8 @@ impl LibReloader {
     /// Subscribes to file change notifications.
     /// Public because it is utilized by the `hot_lib` macro.
     pub fn subscribe_to_file_changes(&mut self) -> mpsc::Receiver<()> {
-        log::trace!("subscribe to file change");
-        // Create a channel, lock the mutex.
+        log::trace!("subscribe to file change"); //TODO: Replace logging.
+                                                 // Create a channel, lock the mutex.
         let (tx, rx) = mpsc::channel();
         let mut subscribers = self.file_change_subscribers.lock().unwrap();
         // Add the sender to the list of subscribers, return the reciever.
@@ -173,7 +173,7 @@ impl LibReloader {
             ..
         } = self;
 
-        log::info!("reloading lib {watched_lib_file:?}");
+        log::info!("reloading lib {watched_lib_file:?}"); //TODO: Replace logging.
 
         // If a library is currently loaded, close it and remove the file if it exists.
         if let Some(lib) = lib.take() {
@@ -196,7 +196,7 @@ impl LibReloader {
             );
 
             // Copy the watched library file to the location for loading.
-            log::trace!("copy {watched_lib_file:?} -> {loaded_lib_file:?}");
+            log::trace!("copy {watched_lib_file:?} -> {loaded_lib_file:?}"); //TODO: Replace logging.
             fs::copy(watched_lib_file, &loaded_lib_file)?;
 
             // Store the hash of the loaded library file for change detection.
@@ -209,7 +209,7 @@ impl LibReloader {
             // Update the loaded library file path.
             self.loaded_lib_file = loaded_lib_file;
         } else {
-            log::warn!("trying to reload library but it does not exist");
+            log::warn!("trying to reload library but it does not exist"); //TODO: Replace logging.
         }
 
         Ok(())
@@ -235,7 +235,7 @@ impl LibReloader {
     ) -> Result<(), HotReloaderError> {
         // Convert the library file path to a `PathBuf` for easier manipulation.
         let lib_file = lib_file.as_ref().to_path_buf();
-        log::info!("start watching changes of file {}", lib_file.display());
+        log::info!("start watching changes of file {}", lib_file.display()); //TODO: Replace logging.
 
         // Spawn a new thread to watch for file changes.
         thread::spawn(move || {
@@ -261,7 +261,7 @@ impl LibReloader {
                     return false;
                 }
 
-                log::debug!("{lib_file:?} changed");
+                log::debug!("{lib_file:?} changed"); //TODO: Replace logging.
 
                 // Set the changed flag to true.
                 changed.store(true, Ordering::Release);
@@ -269,6 +269,7 @@ impl LibReloader {
                 // Notify all subscribers of the change.
                 let subscribers = file_change_subscribers.lock().unwrap();
                 log::trace!(
+                    //TODO: Replace logging.
                     "sending ChangedEvent::LibFileChanged to {} subscribers",
                     subscribers.len()
                 );
@@ -283,22 +284,22 @@ impl LibReloader {
             loop {
                 match rx.recv() {
                     Err(_) => {
-                        log::info!("file watcher channel closed");
+                        log::info!("file watcher channel closed"); //TODO: Replace logging.
                         break;
                     }
                     Ok(events) => {
                         let events = match events {
                             Err(errors) => {
-                                log::error!("{} file watcher error!", errors.len());
+                                log::error!("{} file watcher error!", errors.len()); //TODO: Replace logging.
                                 for err in errors {
-                                    log::error!("  {err}");
+                                    log::error!("  {err}"); //TODO: Replace logging.
                                 }
                                 continue;
                             }
                             Ok(events) => events,
                         };
 
-                        log::trace!("file change events: {events:?}");
+                        log::trace!("file change events: {events:?}"); //TODO: Replace logging.
                         let was_removed =
                             events
                                 .iter()
@@ -313,6 +314,7 @@ impl LibReloader {
                         // If the file was removed, attempt to watch it again.
                         if was_removed || !lib_file.exists() {
                             log::debug!(
+                                //TODO: Replace logging.
                                 "{} was removed, trying to watch it again...",
                                 lib_file.display()
                             );
@@ -323,7 +325,7 @@ impl LibReloader {
                                 .watch(&lib_file, RecursiveMode::NonRecursive)
                                 .is_ok()
                             {
-                                log::info!("watching {lib_file:?} again after removal");
+                                log::info!("watching {lib_file:?} again after removal"); //TODO: Replace logging.
                                 signal_change();
                                 break;
                             }
@@ -356,7 +358,7 @@ impl LibReloader {
     /// Logging helper for the hot lib macro.
     /// TODO: Replace with Sage logging system.
     pub fn log_info(what: impl std::fmt::Display) {
-        log::info!("{}", what);
+        log::info!("{}", what); //TODO: Replace logging.
     }
 }
 
@@ -364,7 +366,7 @@ impl LibReloader {
 impl Drop for LibReloader {
     fn drop(&mut self) {
         if self.loaded_lib_file.exists() {
-            log::trace!("removing {:?}", self.loaded_lib_file);
+            log::trace!("removing {:?}", self.loaded_lib_file); //TODO: Replace logging.
             let _ = fs::remove_file(&self.loaded_lib_file);
         }
     }
