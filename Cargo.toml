@@ -11,4 +11,3 @@ edition = "2021"
 
 [dependencies]
 sage-hot-lib = { path = "crates/sage-hot-lib" }
-test = { path = "crates/test" }
