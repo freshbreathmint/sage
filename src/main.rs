@@ -6,5 +6,6 @@ mod hot_lib {
 fn main() {
     loop {
         hot_lib::test();
+        std::thread::sleep(std::time::Duration::from_secs(1));
     }
 }

@@ -1,0 +1,12 @@
+{
+    "VsCodeTaskButtons.showCounter": false,
+    "VsCodeTaskButtons.tasks": [
+        { 
+        "label": "Label that appears in the taskbar",
+        "alignment": "left",
+        "task": "watch-and-run",
+        "tooltip": "Optional tooltip to show when hovering over the button (defaults to task name)",
+        "description": "A description of the task when viewing the task list in the Quick Pick Menu"
+    }
+    ]
+}
