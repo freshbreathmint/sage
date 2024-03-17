@@ -1,8 +1,8 @@
 # TODO
 
 Current:
-    - Figure out how to make everything work properly with a single command.
-    - Figure out how to put that command into a button on screen.
+    - Figure out how to make the vscode task run in the vscode terminal.
+    - Make this build system nice for now, it doesn't need to be perfect because it's missing the application part of the equasion for now, but it should be fluid and simple.
     - Expand on the example code in main until you have a nicely bespoke version.
     - Fulfill the rest of the requirements in the 0.0.2 doc.
 
