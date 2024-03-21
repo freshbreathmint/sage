@@ -3,7 +3,8 @@
 ## IN DEVELOPMENT
 
 Changes:
-    - Working on implementing a hot reloading library.
+    - Started build system tasks for vscode.
+    - Implemented hot-reloading library.
 
 ## Version 0.0.1
 

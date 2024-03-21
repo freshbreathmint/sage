@@ -1,13 +1,14 @@
 # TODO
 
 Current:
-    - Figure out how to make the vscode task run in the vscode terminal.
-    - Make this build system nice for now, it doesn't need to be perfect because it's missing the application part of the equasion for now, but it should be fluid and simple.
+    - Make it so that we can launch a static version as well as a normal version.
+    - Figure out how to integrate the hot reloader. (If it should be itself hot reloaded? How to structure/seperate hot reloadable libs from normal ones. Etc.)
     - Expand on the example code in main until you have a nicely bespoke version.
     - Fulfill the rest of the requirements in the 0.0.2 doc.
 
 Next Update:
     - Strip the logging system out of the LibReloader and replace it with your own logging system.
+    - Add color to the logging system.
 
 General:
     - Learn Rust.

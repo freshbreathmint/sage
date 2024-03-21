@@ -1,15 +1,31 @@
 {
-    "version": "2.0.0",
-    "tasks": [
+  "version": "2.0.0",
+  "tasks": [
       {
-        "label": "watch-and-run",
-        "type": "shell",
-        "command": "${workspaceFolder}/watch-and-run.bat",
-        "group": {
-          "kind": "build",
-          "isDefault": true
-        },
-        "problemMatcher": []
+          "label": "cargo-watch",
+          "type": "shell",
+          "command": "cargo watch -w crates -x build",
+          "problemMatcher": [],
+          "isBackground": true,
+          "presentation": {
+              "reveal": "always",
+              "panel": "new"
+          }
+      },
+      {
+          "label": "cargo-run",
+          "type": "shell",
+          "command": "cargo run",
+          "problemMatcher": [],
+          "presentation": {
+              "reveal": "always",
+              "panel": "new"
+          }
+      },
+      {
+          "label": "launch-hot-reloadable",
+          "dependsOn": ["cargo-watch", "cargo-run"],
+          "dependsOrder": "parallel"
       }
-    ]
-  }
+  ]
+}

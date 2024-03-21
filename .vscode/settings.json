@@ -2,11 +2,11 @@
     "VsCodeTaskButtons.showCounter": false,
     "VsCodeTaskButtons.tasks": [
         { 
-        "label": "Label that appears in the taskbar",
+        "label": "Launch (🔥)",
         "alignment": "left",
-        "task": "watch-and-run",
-        "tooltip": "Optional tooltip to show when hovering over the button (defaults to task name)",
-        "description": "A description of the task when viewing the task list in the Quick Pick Menu"
+        "task": "launch-hot-reloadable",
+        "tooltip": "Launch a hot-reloadable version of Sage Engine.",
+        "description": "Launches a hot-reloadable version of Sage Engine."
     }
     ]
 }
