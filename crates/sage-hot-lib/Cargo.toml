@@ -8,5 +8,5 @@ crc32fast = "1.4.0"
 libloading = "0.8.3"
 notify = "6.1.1"
 notify-debouncer-full = "0.3.1"
-sage-hot-lib-macro = { path = "../sage-hot-lib-macro" }
+sage-hot-lib-macro = { path = "macro" }
 thiserror = "1.0.58"
