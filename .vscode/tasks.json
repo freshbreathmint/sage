@@ -13,9 +13,9 @@
           }
       },
       {
-          "label": "cargo-run",
+          "label": "cargo-run-reload",
           "type": "shell",
-          "command": "cargo run",
+          "command": "cargo run --features reload",
           "problemMatcher": [],
           "presentation": {
               "reveal": "always",
@@ -24,8 +24,18 @@
       },
       {
           "label": "launch-hot-reloadable",
-          "dependsOn": ["cargo-watch", "cargo-run"],
+          "dependsOn": ["cargo-watch", "cargo-run-reload"],
           "dependsOrder": "parallel"
+      },
+      {
+        "label": "cargo-run",
+        "type": "shell",
+        "command": "cargo run",
+        "problemMatcher": [],
+        "presentation": {
+            "reveal": "always",
+            "panel": "new"
+        }
       }
   ]
 }

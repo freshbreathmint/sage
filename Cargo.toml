@@ -10,5 +10,9 @@ version = "0.0.2-dev"
 edition = "2021"
 
 [dependencies]
-sage-hot-lib = { path = "crates/sage-hot-lib" }
+sage-hot-lib = { path = "crates/sage-hot-lib", optional = true }
 lib = { path= "crates/lib" }
+
+[features]
+default = []
+reload = ["dep:sage-hot-lib"]

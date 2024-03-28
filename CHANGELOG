@@ -3,7 +3,7 @@
 ## IN DEVELOPMENT
 
 Changes:
-    - Started build system tasks for vscode.
+    - Added vscode tasks for building a static and hot-reloadable version of Sage.
     - Implemented hot-reloading library.
 
 ## Version 0.0.1

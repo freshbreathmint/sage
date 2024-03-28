@@ -2,11 +2,18 @@
     "VsCodeTaskButtons.showCounter": false,
     "VsCodeTaskButtons.tasks": [
         { 
-        "label": "Launch (🔥)",
-        "alignment": "left",
-        "task": "launch-hot-reloadable",
-        "tooltip": "Launch a hot-reloadable version of Sage Engine.",
-        "description": "Launches a hot-reloadable version of Sage Engine."
-    }
+            "label": "Launch (🔥)",
+            "alignment": "left",
+            "task": "launch-hot-reloadable",
+            "tooltip": "Launch a hot-reloadable version of Sage Engine.",
+            "description": "Launches a hot-reloadable version of Sage Engine."
+        },
+        { 
+            "label": "Launch (🪨)",
+            "alignment": "left",
+            "task": "cargo-run",
+            "tooltip": "Launch a static version of Sage Engine.",
+            "description": "Launches a static version of Sage Engine."
+        }
     ]
 }
