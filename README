@@ -2,10 +2,13 @@
 
 ## About
 
-Sage will be a feature rich piece of software, in the future!
+Sage will be a feature-rich piece of software, in the future!
 
-Currently; this project is not in a state where it can be considered 'in-development'. Hopefully that changes soon.
-In the future, the scope will likely be an application framework and game engine, primarily for the purpose of developing video games.
+This project is an attempt at creating a software framework/application engine/development kit designed to make creating Rust applications easier, for me personally. Once it is useful to me, hopefully it will also be useful to other people.
+It will contain various toggleable libraries and a suite of features (hot code/asset reloading, etc.) that will make developing complex applications/games in Rust easier for users.
+
+Applications will be seperate libraries that hook into the engine, allowing the engine to know which systems to use and providing it with the rest of the instruction set needed to run.
+
 The plan is to produce multiple demonstration applications/games, developed for the purpose of improving the engine over time and facilitating my own personal learning.
 
 ## Credits
