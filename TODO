@@ -1,20 +1,15 @@
 # TODO
 
-Current:
-    - Figure out how to make it so that the target folder isn't getting filled up with a bunch of lib-hot-X files. (Maybe just a button to clear the target folder?)
-    - Maybe differentiate between a debug build and a release build? I'm not sure.
-    - Figure out how to integrate the hot reloader. (If it should be itself hot reloaded? How to structure/seperate hot reloadable libs from normal ones. Etc.)
-    - Expand on the example code in main until you have a nicely bespoke version.
-    - Fulfill the rest of the requirements in the 0.0.2 doc.
+Current Tasks:
+    - Figure out how to structure this stuff.
+    - Start building out an application/engine system.
 
-Next Update:
+Current Issues:
+    - Target folder gets filled with hot-reloaded libraries.
+
+Logging:
     - Strip the logging system out of the LibReloader and replace it with your own logging system.
     - Add color to the logging system.
-
-General:
-    - Learn Rust.
-    - Figure out how to build what you want to make.
-    - Begin the arduous process of rewriting what took you months to do in the first place.
 
 Never:
     - Give up!
