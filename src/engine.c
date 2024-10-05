@@ -2,11 +2,15 @@
 #include "libapi.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
-void funcA(){
-    printf("Sage says hello!\n");
-}
+void run_engine(){
+    int cycle = 1;
 
-void funcB(){
-    printf("Sage says hello again!\n");
+    while(cycle < 100){
+        printf("Cycle: %i\n", cycle);
+        cycle++;
+
+        sleep(1);
+    }
 }
