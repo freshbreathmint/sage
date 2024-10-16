@@ -1,4 +1,3 @@
 #pragma once
 
-void funcA();
-void funcB();
+void init_window();

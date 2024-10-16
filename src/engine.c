@@ -1,16 +1,12 @@
 #include "engine.h"
 #include "libapi.h"
 
-#include <stdio.h>
-#include <unistd.h>
+#include "platform/platform.h"
 
-void run_engine(){
-    int cycle = 1;
+void init_window(){
+    platform_init_window();
 
-    while(cycle < 100){
-        printf("Cycle: %i\n", cycle);
-        cycle++;
-
-        sleep(1);
+    while(1){
+        platform_process_message();
     }
 }
