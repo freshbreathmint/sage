@@ -2,22 +2,33 @@
 
 #if PLATFORM_WINDOWS
 
+#include <stdlib.h>
 #include <windows.h>
+
+// Internal State (Windows)
+typedef struct internal_state {
+    HINSTANCE h_instance;
+    HWND hwnd;
+} internal_state;
 
 // Forward declaration for window procedure callback
 LRESULT CALLBACK window_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 
-void platform_init_window(){
+void platform_init_window(platform_state *platform){
+    // Allocate the internal state and cast to known type
+    platform->internal = malloc(sizeof(internal_state));
+    internal_state *state = (internal_state*)platform->internal;
+
     // handle to application instance
-    HINSTANCE h_instance = GetModuleHandle(NULL);
+    state->h_instance = GetModuleHandle(NULL);
 
     // define window class
-    HICON icon  = LoadIcon(h_instance, "APPLICATION_ICON");
+    HICON icon  = LoadIcon(state->h_instance, "APPLICATION_ICON");
 
     WNDCLASS wc = {0};
     wc.style = CS_DBLCLKS;  // enable double-clicking
     wc.lpfnWndProc = window_proc;
-    wc.hInstance = h_instance;
+    wc.hInstance = state->h_instance;
     wc.hIcon = icon;
     wc.lpszClassName = "SageWindow";
 
@@ -42,12 +53,19 @@ void platform_init_window(){
         500, 300,                       // Window Size (width, height)
         NULL,                           // Parent Window
         NULL,                           // Menu
-        h_instance,                     // Instance Handle
+        state->h_instance,              // Instance Handle
         NULL                            // lpParam
     );
 
+    // Set the internal state
+    state->hwnd = hwnd;
+
     //show window
-    ShowWindow(hwnd, SW_SHOWNORMAL);
+    ShowWindow(state->hwnd, SW_SHOWNORMAL);
+}
+
+void platform_free_internal_state(platform_state *platform){
+    free(platform->internal);
 }
 
 void platform_process_message(){

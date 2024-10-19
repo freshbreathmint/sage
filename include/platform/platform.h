@@ -14,5 +14,12 @@
     #error "SAGE: Unknown/Unsupported Platform"
 #endif
 
-void platform_init_window();
+// Platform State
+typedef struct platform_state {
+    void* internal;
+} platform_state;
+
+
+void platform_init_window(platform_state *platform);
+void platform_free_internal_state(platform_state *platform);
 void platform_process_message();
