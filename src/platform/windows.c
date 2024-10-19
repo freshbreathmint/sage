@@ -65,7 +65,15 @@ void platform_init_window(platform_state *platform){
 }
 
 void platform_free_internal_state(platform_state *platform){
-    free(platform->internal);
+    internal_state *state = (internal_state*)platform->internal;
+
+    // destroy window if it still exists
+    if(state->hwnd){
+        DestroyWindow(state->hwnd);
+        state->hwnd = 0;
+    }
+
+    free(state);
 }
 
 void platform_process_message(){
